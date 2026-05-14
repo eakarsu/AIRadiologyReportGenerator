@@ -4,11 +4,30 @@ const auth = require('../middleware/auth');
 
 router.get('/', auth, async (req, res) => {
   try {
-    const result = await db.query('SELECT * FROM patients ORDER BY created_at DESC');
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
+    const search = req.query.search || '';
+
+    let where = '';
+    let params = [];
+    if (search) {
+      where = `WHERE first_name ILIKE $1 OR last_name ILIKE $1 OR mrn ILIKE $1 OR email ILIKE $1`;
+      params.push(`%${search}%`);
+    }
+
+    const countResult = await db.query(`SELECT COUNT(*) FROM patients ${where}`, params);
+    const total = parseInt(countResult.rows[0].count);
+
+    params.push(limit, offset);
+    const li = params.length;
+    const result = await db.query(
+      `SELECT * FROM patients ${where} ORDER BY created_at DESC LIMIT $${li - 1} OFFSET $${li}`,
+      params
+    );
+
+    res.json({ data: result.rows, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 router.get('/:id', auth, async (req, res) => {
@@ -16,9 +35,7 @@ router.get('/:id', auth, async (req, res) => {
     const result = await db.query('SELECT * FROM patients WHERE id = $1', [req.params.id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Patient not found' });
     res.json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 router.post('/', auth, async (req, res) => {
@@ -29,9 +46,7 @@ router.post('/', auth, async (req, res) => {
       [mrn, first_name, last_name, date_of_birth, gender, phone, email, address, insurance_provider, insurance_id, emergency_contact, allergies, medical_history]
     );
     res.status(201).json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 router.put('/:id', auth, async (req, res) => {
@@ -42,18 +57,14 @@ router.put('/:id', auth, async (req, res) => {
       [mrn, first_name, last_name, date_of_birth, gender, phone, email, address, insurance_provider, insurance_id, emergency_contact, allergies, medical_history, status, req.params.id]
     );
     res.json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 router.delete('/:id', auth, async (req, res) => {
   try {
     await db.query('DELETE FROM patients WHERE id = $1', [req.params.id]);
     res.json({ message: 'Patient deleted' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 module.exports = router;
