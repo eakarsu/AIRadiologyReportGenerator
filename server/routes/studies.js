@@ -48,7 +48,9 @@ router.get('/', auth, async (req, res) => {
       params
     );
 
-    res.json({ data: result.rows, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+    const totalPages = Math.ceil(total / limit);
+    res.set({ 'X-Total-Count': String(total), 'X-Page': String(page), 'X-Limit': String(limit), 'X-Total-Pages': String(totalPages) });
+    res.json(result.rows);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

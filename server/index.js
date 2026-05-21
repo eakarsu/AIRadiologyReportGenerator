@@ -11,7 +11,8 @@ const CLIENT_URL = process.env.CLIENT_URL || `http://localhost:3000`;
 app.use(helmet());
 app.use(cors({
   origin: CLIENT_URL,
-  credentials: true
+  credentials: true,
+  exposedHeaders: ['X-Total-Count', 'X-Page', 'X-Limit', 'X-Total-Pages']
 }));
 app.use(express.json({ limit: '10mb' }));
 
