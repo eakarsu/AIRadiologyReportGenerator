@@ -128,11 +128,36 @@ async function persistAICall(userId, endpoint, inputData, result, model) {
 
 // ─── Helper: run AI + persist + respond ───────────────────────────────────
 async function runAI(req, res, endpoint, prompt, systemPrompt, inputData, options = {}) {
-  const response = await callOpenRouter(prompt, systemPrompt, options);
+  // If an image was attached, process it (DICOM→PNG, deid, sha256) and add
+  // to the OpenRouter call. Backward-compatible: no image → no change.
+  let imageOpts = {};
+  let imageMeta = {};
+  if (req && req.file) {
+    try {
+      const { processForVision } = require('../services/imageProcessor');
+      const processed = await processForVision(
+        req.file.path,
+        req.file.originalname,
+        req.file.mimetype,
+        { deidentify: req.body && req.body.skip_deid !== 'true' }
+      );
+      imageOpts = { imageBase64: processed.buffer.toString('base64'), mimeType: processed.mimeType };
+      imageMeta = {
+        image_attached: true,
+        image_sha256: processed.sha256,
+        processing: processed.processing,
+        ip_address: (req.ip || (req.headers && req.headers['x-forwarded-for'])) || null,
+        user_agent: (req.headers && req.headers['user-agent']) || null,
+      };
+    } catch (e) {
+      imageMeta = { image_attached: true, image_error: e.message };
+    }
+  }
+  const response = await callOpenRouter(prompt, systemPrompt, { ...options, ...imageOpts });
   const content = response.choices[0].message.content;
   const model = response.model || options.model || 'anthropic/claude-3-5-sonnet-20241022';
-  await persistAICall(req.user?.id, endpoint, inputData, content, model);
-  return { result: content, model, usage: response.usage };
+  await persistAICall(req.user?.id, endpoint, { ...inputData, ...imageMeta }, content, model);
+  return { result: content, model, usage: response.usage, ...imageMeta };
 }
 
 // 503 wrapper for new endpoints (existing endpoints keep prior behavior)
@@ -145,7 +170,7 @@ function aiErrorStatus(err) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 // 1. AI Report Generation
-router.post('/generate-report', auth, aiRateLimiter, async (req, res) => {
+router.post('/generate-report', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { study_description, modality, body_part, clinical_indication, patient_age, patient_gender } = req.body;
     const systemPrompt = 'You are an expert radiologist AI assistant. Generate professional, structured radiology reports following ACR guidelines. Use standard radiology reporting format with FINDINGS and IMPRESSION sections. Be thorough, precise, and clinically relevant.';
@@ -168,7 +193,7 @@ Provide a complete structured report with:
 });
 
 // 2. AI Clinical Findings Extraction
-router.post('/extract-findings', auth, aiRateLimiter, async (req, res) => {
+router.post('/extract-findings', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { report_text } = req.body;
     const systemPrompt = 'You are a radiology AI that extracts and categorizes clinical findings from radiology reports. Provide structured, detailed extraction.';
@@ -189,7 +214,7 @@ Format as a structured analysis with each finding clearly categorized.`;
 });
 
 // 3. AI Diagnosis Suggestion
-router.post('/suggest-diagnosis', auth, aiRateLimiter, async (req, res) => {
+router.post('/suggest-diagnosis', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { findings, clinical_history, modality } = req.body;
     const systemPrompt = 'You are an expert diagnostic radiology AI. Provide differential diagnoses based on imaging findings, ranked by likelihood.';
@@ -211,7 +236,7 @@ Provide:
 });
 
 // 4. AI Report Summarization
-router.post('/summarize-report', auth, aiRateLimiter, async (req, res) => {
+router.post('/summarize-report', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { report_text } = req.body;
     const systemPrompt = 'You are a radiology report summarization AI. Create clear, concise summaries that highlight the most clinically important findings.';
@@ -230,7 +255,7 @@ ${deidentify(report_text)}`;
 });
 
 // 5. AI Critical Finding Detection
-router.post('/detect-critical', auth, aiRateLimiter, async (req, res) => {
+router.post('/detect-critical', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { report_text, findings } = req.body;
     const systemPrompt = 'You are a critical finding detection AI for radiology. Identify any findings that require immediate clinical attention based on ACR guidelines.';
@@ -252,7 +277,7 @@ Evaluate for:
 });
 
 // 6. AI Report Quality Check
-router.post('/quality-check', auth, aiRateLimiter, async (req, res) => {
+router.post('/quality-check', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { report_text, modality, body_part } = req.body;
     const systemPrompt = 'You are a radiology report quality assurance AI. Evaluate reports for completeness, accuracy, clarity, and adherence to reporting standards.';
@@ -278,7 +303,7 @@ Evaluate:
 });
 
 // 7. AI Patient Communication
-router.post('/patient-summary', auth, aiRateLimiter, async (req, res) => {
+router.post('/patient-summary', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { report_text, patient_name } = req.body;
     const systemPrompt = 'You are a medical communication AI that translates complex radiology reports into patient-friendly language.';
@@ -299,7 +324,7 @@ Include:
 });
 
 // 8. AI Differential Diagnosis
-router.post('/differential-diagnosis', auth, aiRateLimiter, async (req, res) => {
+router.post('/differential-diagnosis', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { imaging_findings, patient_age, patient_gender, clinical_history } = req.body;
     const systemPrompt = 'You are an expert diagnostic radiology AI specializing in differential diagnosis.';
@@ -322,7 +347,7 @@ Provide:
 });
 
 // 9. AI Follow-up Recommendations
-router.post('/follow-up-recommendations', auth, aiRateLimiter, async (req, res) => {
+router.post('/follow-up-recommendations', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { findings, modality, body_part, clinical_context } = req.body;
     const systemPrompt = 'You are a radiology follow-up recommendation AI based on ACR Appropriateness Criteria and Fleischner Society guidelines.';
@@ -346,7 +371,7 @@ Provide:
 });
 
 // 10. AI Report Comparison
-router.post('/compare-reports', auth, aiRateLimiter, async (req, res) => {
+router.post('/compare-reports', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { current_report, prior_report } = req.body;
     const systemPrompt = 'You are a radiology AI that compares current and prior imaging reports to identify changes, progression, or improvement.';
@@ -373,7 +398,7 @@ Provide:
 });
 
 // 11. AI Patient Risk Assessment
-router.post('/patient-risk', auth, aiRateLimiter, async (req, res) => {
+router.post('/patient-risk', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { patient_age, patient_gender, medical_history, allergies, current_findings } = req.body;
     const systemPrompt = 'You are a clinical risk assessment AI for radiology departments.';
@@ -399,7 +424,7 @@ Provide:
 });
 
 // 12. AI Study Protocol Recommendation
-router.post('/protocol-recommendation', auth, aiRateLimiter, async (req, res) => {
+router.post('/protocol-recommendation', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { clinical_indication, body_part, patient_age, patient_gender, prior_studies } = req.body;
     const systemPrompt = 'You are a radiology protocol optimization AI based on ACR Appropriateness Criteria.';
@@ -425,7 +450,7 @@ Provide:
 });
 
 // 13. AI Radiologist Workload Analysis
-router.post('/workload-analysis', auth, aiRateLimiter, async (req, res) => {
+router.post('/workload-analysis', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { radiologist_name, specialization, reports_today, accuracy_rate, shift, years_experience } = req.body;
     const systemPrompt = 'You are a radiology department management AI.';
@@ -453,7 +478,7 @@ Provide:
 });
 
 // 14. AI Modality Selection
-router.post('/modality-selection', auth, aiRateLimiter, async (req, res) => {
+router.post('/modality-selection', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { clinical_question, body_region, patient_age, patient_gender, contraindications, prior_imaging } = req.body;
     const systemPrompt = 'You are a radiology imaging modality selection AI based on ACR Appropriateness Criteria.';
@@ -480,7 +505,7 @@ Provide:
 });
 
 // 15. AI Template Generator
-router.post('/generate-template', auth, aiRateLimiter, async (req, res) => {
+router.post('/generate-template', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { modality, body_part, exam_type, specialty_focus } = req.body;
     const systemPrompt = 'You are a radiology report template creation AI following RSNA and ACR reporting guidelines.';
@@ -506,7 +531,7 @@ Create a complete template with:
 });
 
 // 16. AI Billing Code Suggestion
-router.post('/billing-suggestion', auth, aiRateLimiter, async (req, res) => {
+router.post('/billing-suggestion', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { study_description, modality, body_part, contrast_used, clinical_indication } = req.body;
     const systemPrompt = 'You are a radiology billing and coding AI expert.';
@@ -534,7 +559,7 @@ Provide:
 });
 
 // 17. AI Audit Anomaly Detection
-router.post('/audit-analysis', auth, aiRateLimiter, async (req, res) => {
+router.post('/audit-analysis', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { audit_summary, time_period, department } = req.body;
     const systemPrompt = 'You are a radiology department audit and compliance AI.';
@@ -560,7 +585,7 @@ Provide:
 });
 
 // 18. AI Radiation Dose Optimization
-router.post('/dose-optimization', auth, aiRateLimiter, async (req, res) => {
+router.post('/dose-optimization', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { modality, body_part, patient_age, patient_weight, clinical_indication, prior_exams_count } = req.body;
     const systemPrompt = 'You are a radiation dose optimization AI following ALARA principles and ACR Dose Index Registry guidelines.';
@@ -589,7 +614,7 @@ Provide:
 });
 
 // 19. AI Teaching Case Generator
-router.post('/teaching-case', auth, aiRateLimiter, async (req, res) => {
+router.post('/teaching-case', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { findings, modality, diagnosis, difficulty_level } = req.body;
     const systemPrompt = 'You are a radiology education AI. Create comprehensive teaching cases for radiology residents and fellows.';
@@ -617,7 +642,7 @@ Generate:
 });
 
 // 20. AI Dashboard Insights
-router.post('/dashboard-insights', auth, aiRateLimiter, async (req, res) => {
+router.post('/dashboard-insights', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { total_patients, total_studies, total_reports, pending_studies, critical_reports, ai_reports, active_radiologists } = req.body;
     const systemPrompt = 'You are a radiology department analytics AI. Provide actionable insights and recommendations based on department metrics.';
@@ -664,7 +689,7 @@ router.post('/studies/:id/upload-image', auth, upload.single('image'), async (re
 });
 
 // ─── Vision AI Image Analysis ──────────────────────────────────────────────
-router.post('/studies/:id/ai-image-analysis', auth, aiRateLimiter, async (req, res) => {
+router.post('/studies/:id/ai-image-analysis', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const studyId = req.params.id;
 
@@ -709,7 +734,7 @@ Please provide:
 });
 
 // AI Prior Comparison (compare current to a patient's own prior exams)
-router.post('/prior-comparison', auth, aiRateLimiter, async (req, res) => {
+router.post('/prior-comparison', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { patient_id, current_report, prior_reports } = req.body;
     const systemPrompt = 'You are a radiology AI specialized in longitudinal comparison across a single patient\'s priors.';
@@ -739,7 +764,7 @@ Provide:
 });
 
 // AI Protocol Compliance Audit (vs ACR / institutional standards)
-router.post('/protocol-compliance-audit', auth, aiRateLimiter, async (req, res) => {
+router.post('/protocol-compliance-audit', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { study_protocol, modality, clinical_indication, institution_standard } = req.body;
     const systemPrompt = 'You are a radiology compliance AI checking exam protocols against ACR Appropriateness Criteria and institutional standards.';
@@ -766,7 +791,7 @@ Return JSON:
 });
 
 // AI Incidental Finding Flagger
-router.post('/incidental-finding-flag', auth, aiRateLimiter, async (req, res) => {
+router.post('/incidental-finding-flag', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { report_text, clinical_indication } = req.body;
     const systemPrompt = 'You are a radiology AI that identifies incidental findings (findings unrelated to the reason for the exam) and grades follow-up urgency.';
@@ -799,7 +824,7 @@ Return JSON:
 });
 
 // AI Radiation Dose Tracking
-router.post('/radiation-dose-tracking', auth, aiRateLimiter, async (req, res) => {
+router.post('/radiation-dose-tracking', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { patient_id, dose_history, modality, body_part, current_exam_dose } = req.body;
     if (!Array.isArray(dose_history)) {
@@ -830,7 +855,7 @@ Return JSON:
 });
 
 // AI Patient-Facing Plain-Language Summary
-router.post('/patient-friendly-summary', auth, aiRateLimiter, async (req, res) => {
+router.post('/patient-friendly-summary', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { report_text, reading_level } = req.body;
     if (!report_text) return res.status(400).json({ error: 'report_text is required' });
@@ -858,7 +883,7 @@ Return JSON:
 });
 
 // AI Reporting Template Recommender
-router.post('/reporting-template-recommender', auth, aiRateLimiter, async (req, res) => {
+router.post('/reporting-template-recommender', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
     const { modality, body_part, clinical_indication, sub_specialty } = req.body;
     if (!modality || !body_part) return res.status(400).json({ error: 'modality and body_part are required' });
