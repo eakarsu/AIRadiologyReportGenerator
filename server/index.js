@@ -36,6 +36,10 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
+// Background uploads cleanup (sweeps server/uploads/ every hour, deletes files >24h old)
+const { startUploadCleanup } = require('./services/uploadCleanup');
+startUploadCleanup();
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

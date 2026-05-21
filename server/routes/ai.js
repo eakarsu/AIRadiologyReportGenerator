@@ -13,10 +13,13 @@ if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
 const upload = multer({
   dest: uploadDir,
-  limits: { fileSize: 20 * 1024 * 1024 },
+  limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    if (/image\/(jpeg|png|gif|webp|bmp|tiff)/.test(file.mimetype)) cb(null, true);
-    else cb(new Error('Only image files are allowed'));
+    const isImage = /image\/(jpeg|png|gif|webp|bmp|tiff)/.test(file.mimetype);
+    const isDicomMime = /application\/dicom/i.test(file.mimetype || '');
+    const isDicomExt = /\.(dcm|dicom)$/i.test(file.originalname || '');
+    if (isImage || isDicomMime || isDicomExt) cb(null, true);
+    else cb(new Error('Only image or DICOM files are allowed'));
   }
 });
 
@@ -933,22 +936,43 @@ router.get('/history', auth, async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const requirePaidFeature = require('../middleware/requirePaidFeature');
+const { processForVision } = require('../services/imageProcessor');
 
 async function runVisionAI(req, res, endpoint, prompt, systemPrompt, extraInputData = {}) {
   if (!req.file) {
     res.status(400).json({ error: 'No image file provided (multipart field: image)' });
     return null;
   }
-  const imageBuffer = fs.readFileSync(req.file.path);
-  const imageBase64 = imageBuffer.toString('base64');
-  const mimeType = req.file.mimetype || 'image/jpeg';
-  const response = await callOpenRouter(prompt, systemPrompt, { imageBase64, mimeType, json: true });
+  // Pipeline: file on disk → DICOM-convert (if .dcm) → pixel-deid strips → PNG buffer + sha256
+  const processed = await processForVision(
+    req.file.path,
+    req.file.originalname,
+    req.file.mimetype,
+    { deidentify: req.body.skip_deid !== 'true' }
+  );
+  const imageBase64 = processed.buffer.toString('base64');
+  const response = await callOpenRouter(prompt, systemPrompt, { imageBase64, mimeType: processed.mimeType, json: true });
   const content = response.choices[0].message.content;
   const model = response.model || 'anthropic/claude-3-5-sonnet-20241022';
-  const inputData = { filename: req.file.originalname, size: req.file.size, ...extraInputData };
+  const inputData = {
+    filename: req.file.originalname,
+    size: req.file.size,
+    image_sha256: processed.sha256,
+    processing: processed.processing,
+    ip_address: req.ip || req.headers['x-forwarded-for'] || null,
+    user_agent: req.headers['user-agent'] || null,
+    ...extraInputData,
+  };
   await persistAICall(req.user?.id, endpoint, inputData, content, model);
   const parsed = parseAIJson(content);
-  return { result: parsed || content, raw: content, model, usage: response.usage };
+  return {
+    result: parsed || content,
+    raw: content,
+    model,
+    usage: response.usage,
+    processing: processed.processing,
+    image_sha256: processed.sha256,
+  };
 }
 
 // ─── F1: HOPPR — Vision-language narrative report from image ───────────────
