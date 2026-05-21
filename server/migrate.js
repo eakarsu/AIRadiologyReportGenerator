@@ -42,6 +42,24 @@ async function migrate() {
   await db.query(`ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS details JSONB DEFAULT '{}'`).catch(() => {});
   console.log('Updated audit_logs columns');
 
+  // paid_features table — direct-to-consumer AI add-on entitlements (F6 / SimonMed)
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS paid_features (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      feature VARCHAR(100) NOT NULL,
+      status VARCHAR(20) DEFAULT 'active',
+      stripe_session_id VARCHAR(255),
+      amount_cents INTEGER,
+      currency VARCHAR(10) DEFAULT 'USD',
+      activated_at TIMESTAMP DEFAULT NOW(),
+      expires_at TIMESTAMP,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+  await db.query(`CREATE INDEX IF NOT EXISTS idx_paid_features_user_feature ON paid_features(user_id, feature) WHERE status = 'active'`).catch(() => {});
+  console.log('Created paid_features table (DTC add-ons)');
+
   console.log('Migrations complete!');
   process.exit(0);
 }

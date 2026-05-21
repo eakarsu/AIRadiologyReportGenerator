@@ -926,4 +926,384 @@ router.get('/history', auth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// ═══════════════════════════════════════════════════════════════════════════
+// LinkedIn Radiology AI Brief Issue #5 — modality-specific feature pack
+// F1 HOPPR · F2 AZmed · F3 RIVANNA · F4 EchoIQ · F5 Heartflow
+// F6 SimonMed (DTC) · F7 Karolinska · F8 Foundation models · F9 DeepHealth
+// ═══════════════════════════════════════════════════════════════════════════
+
+const requirePaidFeature = require('../middleware/requirePaidFeature');
+
+async function runVisionAI(req, res, endpoint, prompt, systemPrompt, extraInputData = {}) {
+  if (!req.file) {
+    res.status(400).json({ error: 'No image file provided (multipart field: image)' });
+    return null;
+  }
+  const imageBuffer = fs.readFileSync(req.file.path);
+  const imageBase64 = imageBuffer.toString('base64');
+  const mimeType = req.file.mimetype || 'image/jpeg';
+  const response = await callOpenRouter(prompt, systemPrompt, { imageBase64, mimeType, json: true });
+  const content = response.choices[0].message.content;
+  const model = response.model || 'anthropic/claude-3-5-sonnet-20241022';
+  const inputData = { filename: req.file.originalname, size: req.file.size, ...extraInputData };
+  await persistAICall(req.user?.id, endpoint, inputData, content, model);
+  const parsed = parseAIJson(content);
+  return { result: parsed || content, raw: content, model, usage: response.usage };
+}
+
+// ─── F1: HOPPR — Vision-language narrative report from image ───────────────
+router.post('/narrative-from-image', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
+  try {
+    const { modality, patient_context, body_part } = req.body;
+    const systemPrompt = 'You are an expert radiologist producing structured narrative reports from medical images. Always return strict JSON.';
+    const prompt = `Generate a structured radiology report from this image.
+Modality: ${modality || 'unspecified'}
+Body part: ${body_part || 'unspecified'}
+Patient context: ${deidentify(patient_context || 'not provided')}
+
+Return JSON with these keys:
+- findings: array of {region, description, severity}
+- impression: string (numbered key findings)
+- next_steps: array of strings
+- critical_findings: array of strings (flag urgent items)`;
+    const data = await runVisionAI(req, res, 'narrative-from-image', prompt, systemPrompt, { modality, body_part });
+    if (data) res.json(data);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── F2: AZmed AZtrauma — Trauma X-ray analysis ────────────────────────────
+router.post('/trauma-xray-analysis', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
+  try {
+    const { body_region, patient_age } = req.body;
+    const systemPrompt = 'You are a trauma radiology AI specialized in fracture, joint effusion, and dislocation detection on plain X-rays for adult and pediatric patients. Return strict JSON.';
+    const prompt = `Analyze this trauma X-ray.
+Body region: ${body_region || 'unspecified'}
+Patient age: ${patient_age || 'unspecified'}
+
+Return JSON:
+- fractures: array of {location, type (transverse/oblique/comminuted/spiral/greenstick), displacement_mm, confidence}
+- joint_effusions: array of {joint, size (small/moderate/large), confidence}
+- dislocations: array of {joint, direction, confidence}
+- severity: "low" | "moderate" | "severe"
+- pediatric_specific_findings: array of strings (growth plate, buckle, etc.)
+- recommended_imaging: array of strings`;
+    const data = await runVisionAI(req, res, 'trauma-xray-analysis', prompt, systemPrompt, { body_region, patient_age });
+    if (data) res.json(data);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── F3: RIVANNA — Point-of-care ultrasound fracture detection ─────────────
+router.post('/poc-ultrasound-fracture', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
+  try {
+    const { anatomical_site, operator_role } = req.body;
+    const systemPrompt = 'You are an AI specialized in point-of-care ultrasound (POCUS) fracture detection for non-physician operators (paramedics, nurses, medics). Return strict JSON.';
+    const prompt = `Analyze this point-of-care ultrasound image for fracture.
+Anatomical site: ${anatomical_site || 'unspecified'}
+Operator role: ${operator_role || 'non-physician'}
+
+Return JSON:
+- fracture_present: boolean
+- confidence: 0-1
+- site: string
+- cortical_disruption: boolean
+- hematoma_present: boolean
+- sonographer_notes: string (plain-language guidance for non-physician operator)
+- escalation_needed: boolean
+- recommended_followup: string`;
+    const data = await runVisionAI(req, res, 'poc-ultrasound-fracture', prompt, systemPrompt, { anatomical_site, operator_role });
+    if (data) res.json(data);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── F4: EchoIQ — Aortic stenosis screen from echo ─────────────────────────
+router.post('/echo-aortic-stenosis', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
+  try {
+    const { view, peak_velocity_ms, mean_gradient_mmhg, ava_cm2 } = req.body;
+    const systemPrompt = 'You are an echocardiography AI specialized in identifying aortic stenosis from echo images. Return strict JSON.';
+    const prompt = `Screen this echocardiogram frame for aortic stenosis.
+View: ${view || 'unspecified'}
+Peak velocity (m/s): ${peak_velocity_ms || 'n/a'}
+Mean gradient (mmHg): ${mean_gradient_mmhg || 'n/a'}
+AVA (cm²): ${ava_cm2 || 'n/a'}
+
+Return JSON:
+- as_likelihood: 0-1
+- severity: "none" | "mild" | "moderate" | "severe"
+- leaflet_calcification: "none" | "mild" | "moderate" | "severe"
+- lv_hypertrophy_present: boolean
+- referral_recommended: boolean
+- urgency: "routine" | "urgent" | "emergent"
+- reasoning: string`;
+    const data = await runVisionAI(req, res, 'echo-aortic-stenosis', prompt, systemPrompt, { view, peak_velocity_ms, mean_gradient_mmhg, ava_cm2 });
+    if (data) res.json(data);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── F5: Heartflow — Cardiac CT plaque + FFR-CT analysis ───────────────────
+router.post('/cardiac-ct-plaque', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
+  try {
+    const { vessel_name, slice_location } = req.body;
+    const systemPrompt = 'You are a cardiac CT AI specialized in plaque quantification and FFR-CT estimation for CCTA studies. Return strict JSON.';
+    const prompt = `Analyze this cardiac CT slice for plaque and functional significance.
+Vessel: ${vessel_name || 'unspecified'}
+Slice location: ${slice_location || 'unspecified'}
+
+Return JSON:
+- plaque_burden_pct: 0-100
+- ffr_ct_estimate: 0-1 (≤0.80 indicates significant)
+- stenosis_severity: "none" | "minimal" | "mild" | "moderate" | "severe" | "occluded"
+- calcified_volume_mm3: number
+- non_calcified_volume_mm3: number
+- vulnerable_plaque_features: array of strings (positive remodeling, low attenuation, napkin-ring, spotty calcium)
+- vessel_involvement: array of strings
+- recommended_management: string`;
+    const data = await runVisionAI(req, res, 'cardiac-ct-plaque', prompt, systemPrompt, { vessel_name, slice_location });
+    if (data) res.json(data);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── F6: SimonMed — Direct-to-consumer paid AI add-ons ─────────────────────
+
+// DTC marketplace catalog
+router.get('/dtc/catalog', auth, async (req, res) => {
+  res.json({
+    features: [
+      { id: 'calcium-score-plus', name: 'Calcium Score+', description: 'Enhanced coronary calcium scoring with risk stratification', price_cents: 4900, modality: 'CT' },
+      { id: 'ct-bone-density', name: 'CT Bone Density', description: 'Opportunistic osteoporosis screening from CT imaging', price_cents: 3900, modality: 'CT' },
+      { id: 'mr-lumbar-spine-plus', name: 'MR Lumbar Spine+', description: 'Advanced MR lumbar spine analysis with disc-by-disc grading', price_cents: 5900, modality: 'MR' }
+    ]
+  });
+});
+
+// Purchase entitlement (dev: simulates Stripe checkout; production wires real session)
+router.post('/dtc/purchase/:feature', auth, async (req, res) => {
+  try {
+    const { feature } = req.params;
+    const allowed = ['calcium-score-plus', 'ct-bone-density', 'mr-lumbar-spine-plus'];
+    if (!allowed.includes(feature)) return res.status(400).json({ error: 'Unknown feature' });
+    const prices = { 'calcium-score-plus': 4900, 'ct-bone-density': 3900, 'mr-lumbar-spine-plus': 5900 };
+    const stripeSessionId = req.body.stripe_session_id || `dev_${Date.now()}_${feature}`;
+    const result = await db.query(
+      `INSERT INTO paid_features (user_id, feature, status, stripe_session_id, amount_cents, currency, expires_at)
+       VALUES ($1, $2, 'active', $3, $4, 'USD', NOW() + INTERVAL '90 days')
+       RETURNING id, feature, status, expires_at`,
+      [req.user.id, feature, stripeSessionId, prices[feature]]
+    );
+    res.json({ entitlement: result.rows[0] });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// User's active entitlements
+router.get('/dtc/entitlements', auth, async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT feature, status, activated_at, expires_at FROM paid_features
+       WHERE user_id = $1 AND status = 'active' AND (expires_at IS NULL OR expires_at > NOW())
+       ORDER BY activated_at DESC`,
+      [req.user.id]
+    );
+    res.json({ entitlements: result.rows });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// F6a: Calcium Score+ (paid)
+router.post('/calcium-score-plus', auth, requirePaidFeature('calcium-score-plus'), aiRateLimiter, upload.single('image'), async (req, res) => {
+  try {
+    const { patient_age, sex } = req.body;
+    const systemPrompt = 'You are a cardiac CT AI specialized in coronary artery calcium (CAC) scoring with MESA-based risk stratification. Return strict JSON.';
+    const prompt = `Compute Calcium Score+ from this cardiac CT.
+Patient age: ${patient_age || 'unspecified'}
+Sex: ${sex || 'unspecified'}
+
+Return JSON:
+- agatston_score: number
+- volume_score: number
+- mass_score: number
+- vessel_breakdown: { lad: number, lcx: number, rca: number, lm: number }
+- risk_percentile_mesa: 0-100
+- ten_year_ascvd_risk_pct: 0-100
+- statin_eligibility: boolean
+- lifestyle_recommendations: array of strings`;
+    const data = await runVisionAI(req, res, 'calcium-score-plus', prompt, systemPrompt, { patient_age, sex });
+    if (data) res.json(data);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// F6b: CT Bone Density (paid)
+router.post('/ct-bone-density', auth, requirePaidFeature('ct-bone-density'), aiRateLimiter, upload.single('image'), async (req, res) => {
+  try {
+    const { vertebral_level, patient_age, sex } = req.body;
+    const systemPrompt = 'You are a CT AI specialized in opportunistic osteoporosis screening using vertebral HU attenuation. Return strict JSON.';
+    const prompt = `Assess bone density from this CT slice.
+Vertebral level: ${vertebral_level || 'L1'}
+Patient age: ${patient_age || 'unspecified'}
+Sex: ${sex || 'unspecified'}
+
+Return JSON:
+- hounsfield_units_l1: number
+- t_score_estimate: number
+- category: "normal" | "osteopenia" | "osteoporosis"
+- fracture_risk_2yr_pct: 0-100
+- vertebral_fractures_detected: array of {level, grade (Genant 1/2/3)}
+- dxa_referral_recommended: boolean
+- treatment_options: array of strings`;
+    const data = await runVisionAI(req, res, 'ct-bone-density', prompt, systemPrompt, { vertebral_level, patient_age, sex });
+    if (data) res.json(data);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// F6c: MR Lumbar Spine+ (paid)
+router.post('/mr-lumbar-spine-plus', auth, requirePaidFeature('mr-lumbar-spine-plus'), aiRateLimiter, upload.single('image'), async (req, res) => {
+  try {
+    const { sequence, patient_age } = req.body;
+    const systemPrompt = 'You are an MR spine AI providing disc-by-disc grading using Pfirrmann, modic, and stenosis classification. Return strict JSON.';
+    const prompt = `Analyze this MR lumbar spine.
+Sequence: ${sequence || 'T2'}
+Patient age: ${patient_age || 'unspecified'}
+
+Return JSON:
+- disc_findings: array of {level (L1-L2..L5-S1), pfirrmann_grade (I-V), herniation_type (none/bulge/protrusion/extrusion/sequestration), modic_changes (0/I/II/III)}
+- canal_stenosis: array of {level, severity (none/mild/moderate/severe)}
+- foraminal_stenosis: array of {level, side (L/R), severity}
+- facet_arthropathy: array of {level, grade (Weishaupt 0-3)}
+- spondylolisthesis: array of {level, meyerding_grade (I-IV)}
+- impression: string
+- surgical_referral_recommended: boolean`;
+    const data = await runVisionAI(req, res, 'mr-lumbar-spine-plus', prompt, systemPrompt, { sequence, patient_age });
+    if (data) res.json(data);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── F7: Karolinska — Mammography 10-year risk prediction ──────────────────
+router.post('/mammo-10yr-risk', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
+  try {
+    const { patient_age, family_history, density_category, prior_biopsies, brca_status } = req.body;
+    const systemPrompt = 'You are a mammography AI specialized in long-horizon (10-year) breast cancer risk prediction integrating image features with clinical risk factors. Return strict JSON.';
+    const prompt = `Predict 10-year breast cancer risk from this mammogram + clinical context.
+Patient age: ${patient_age || 'unspecified'}
+Family history: ${family_history || 'unspecified'}
+Density category (BI-RADS a-d): ${density_category || 'unspecified'}
+Prior biopsies: ${prior_biopsies || 'none'}
+BRCA status: ${brca_status || 'unknown'}
+
+Return JSON:
+- ten_year_probability: 0-1
+- auc_band: "0.65-0.75" | "0.55-0.65" | "0.75-0.85"
+- risk_tier: "low" | "average" | "elevated" | "high"
+- image_derived_features: { density_pct: number, masking_risk: "low|moderate|high", microcalcifications_present: boolean, architectural_distortion: boolean }
+- recommended_follow_up_interval_months: number
+- supplemental_imaging_recommended: array of strings (e.g., MRI, ABUS, contrast mammo)
+- genetic_counseling_recommended: boolean`;
+    const data = await runVisionAI(req, res, 'mammo-10yr-risk', prompt, systemPrompt, { patient_age, family_history, density_category });
+    if (data) res.json(data);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── F8: Imaging foundation model inference ────────────────────────────────
+router.post('/foundation-model-inference', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
+  try {
+    const { task, output_schema, model } = req.body;
+    if (!task) return res.status(400).json({ error: 'task (free-form prompt) is required' });
+    const systemPrompt = 'You are an imaging foundation model wrapper. Apply the user-specified task to the image and return strict JSON matching the output_schema if provided.';
+    const prompt = `TASK: ${task}
+
+OUTPUT_SCHEMA: ${output_schema || '(none — return any structured JSON appropriate to the task)'}
+
+Apply the task to the image and return JSON.`;
+    const data = await runVisionAI(req, res, 'foundation-model-inference', prompt, systemPrompt, { task, output_schema });
+    if (data) {
+      if (model) data.model = model;
+      res.json(data);
+    }
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── F9: DeepHealth — Connected imaging suite (neuro/prostate/MSK) ─────────
+
+router.post('/brain-age-estimation', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
+  try {
+    const { chronological_age, sequence } = req.body;
+    const systemPrompt = 'You are a brain MRI AI estimating biological brain age from structural imaging. Return strict JSON.';
+    const prompt = `Estimate brain age from this MRI.
+Chronological age: ${chronological_age || 'unspecified'}
+Sequence: ${sequence || 'T1'}
+
+Return JSON:
+- estimated_brain_age_years: number
+- brain_age_gap_years: number (estimated minus chronological)
+- atrophy_pattern: "none" | "global" | "frontotemporal" | "posterior_cortical" | "subcortical"
+- regional_volumes_z: { hippocampus: number, entorhinal: number, temporal: number, frontal: number, ventricles: number }
+- accelerated_aging_flag: boolean
+- recommended_workup: array of strings`;
+    const data = await runVisionAI(req, res, 'brain-age-estimation', prompt, systemPrompt, { chronological_age, sequence });
+    if (data) res.json(data);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/brain-health-screen', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
+  try {
+    const { patient_age, sequence } = req.body;
+    const systemPrompt = 'You are a brain MRI AI performing broad brain-health screening (WMH burden, microbleeds, infarcts, atrophy). Return strict JSON.';
+    const prompt = `Screen this brain MRI for cerebrovascular and neurodegenerative findings.
+Patient age: ${patient_age || 'unspecified'}
+Sequence: ${sequence || 'FLAIR/T2'}
+
+Return JSON:
+- wmh_fazekas_periventricular: 0-3
+- wmh_fazekas_deep: 0-3
+- microbleeds_count: number
+- lacunar_infarcts_count: number
+- enlarged_perivascular_spaces: "none" | "mild" | "moderate" | "severe"
+- chronic_infarcts: array of {location, size_mm}
+- mass_lesion_present: boolean
+- atrophy_global: "none" | "mild" | "moderate" | "severe"
+- vascular_risk_summary: string
+- recommended_followup: array of strings`;
+    const data = await runVisionAI(req, res, 'brain-health-screen', prompt, systemPrompt, { patient_age, sequence });
+    if (data) res.json(data);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/lumbar-mri-analysis', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
+  try {
+    const { sequence, clinical_question } = req.body;
+    const systemPrompt = 'You are an MR spine AI analyzing lumbar MRI with structured grading. Return strict JSON.';
+    const prompt = `Analyze this lumbar MRI.
+Sequence: ${sequence || 'T2'}
+Clinical question: ${deidentify(clinical_question || 'general assessment')}
+
+Return JSON:
+- disc_findings: array of {level, pfirrmann_grade, herniation_type, modic_changes}
+- canal_stenosis: array of {level, severity}
+- foraminal_stenosis: array of {level, side, severity}
+- nerve_root_compression: array of {level, side, nerve_root}
+- impression: string
+- recommended_management: array of strings`;
+    const data = await runVisionAI(req, res, 'lumbar-mri-analysis', prompt, systemPrompt, { sequence, clinical_question });
+    if (data) res.json(data);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/prostate-mri-analysis', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
+  try {
+    const { psa_ng_ml, prior_biopsy } = req.body;
+    const systemPrompt = 'You are a prostate MRI AI providing PI-RADS v2.1 lesion characterization. Return strict JSON.';
+    const prompt = `Analyze this prostate MRI.
+PSA (ng/mL): ${psa_ng_ml || 'unspecified'}
+Prior biopsy: ${prior_biopsy || 'unspecified'}
+
+Return JSON:
+- prostate_volume_cc: number
+- psa_density: number
+- lesions: array of {zone (PZ/TZ/CZ/AFS), location_clock, size_mm, pi_rads_v2_1 (1-5), dwi_score, t2_score, dce_positive (boolean)}
+- ece_suspected: boolean
+- svi_suspected: boolean
+- index_lesion: { lesion_index: number, pi_rads: number }
+- biopsy_recommendation: "no" | "consider" | "yes_targeted" | "yes_systematic_plus_targeted"
+- impression: string`;
+    const data = await runVisionAI(req, res, 'prostate-mri-analysis', prompt, systemPrompt, { psa_ng_ml, prior_biopsy });
+    if (data) res.json(data);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 module.exports = router;
