@@ -937,6 +937,33 @@ router.get('/history', auth, async (req, res) => {
 
 const requirePaidFeature = require('../middleware/requirePaidFeature');
 const { processForVision } = require('../services/imageProcessor');
+const { runReplicateModel } = require('../services/replicateAI');
+
+// Default Replicate models per modality. Configurable via env so you can
+// swap to better models without code changes.
+//   - Trauma X-ray: yorickvP/torchxrayvision (multi-label CheXpert classes)
+//   - Default: leave undefined — endpoint will skip Replicate and use only LLM
+const REPLICATE_MODELS = {
+  trauma: process.env.REPLICATE_TRAUMA_XRAY_MODEL || 'yorickvp/torchxrayvision',
+  chest:  process.env.REPLICATE_CHEST_XRAY_MODEL  || 'yorickvp/torchxrayvision',
+};
+
+// Call a Replicate classifier with the processed image and return a compact
+// summary (top-K labels with probabilities). Falls back gracefully on any error.
+async function runMedicalClassifier(modelKey, pngBuffer) {
+  const modelRef = REPLICATE_MODELS[modelKey];
+  if (!modelRef) return { skipped: true, reason: 'no_model_configured' };
+  try {
+    // Replicate accepts base64 data URLs for image inputs
+    const dataUrl = `data:image/png;base64,${pngBuffer.toString('base64')}`;
+    const result = await runReplicateModel(modelRef, { image: dataUrl });
+    if (result.skipped) return result;
+    if (result.error) return { error: result.error, details: result.details };
+    return { ok: true, model_ref: modelRef, output: result.output, metrics: result.metrics };
+  } catch (e) {
+    return { error: 'classifier_exception', message: e.message };
+  }
+}
 
 async function runVisionAI(req, res, endpoint, prompt, systemPrompt, extraInputData = {}) {
   if (!req.file) {
@@ -996,13 +1023,31 @@ Return JSON with these keys:
 });
 
 // ─── F2: AZmed AZtrauma — Trauma X-ray analysis ────────────────────────────
+// Two-stage: real medical classifier (Replicate) → LLM narrative grounded
+// on the classifier's probabilities.
 router.post('/trauma-xray-analysis', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
   try {
+    if (!req.file) return res.status(400).json({ error: 'No image file provided (multipart field: image)' });
     const { body_region, patient_age } = req.body;
-    const systemPrompt = 'You are a trauma radiology AI specialized in fracture, joint effusion, and dislocation detection on plain X-rays for adult and pediatric patients. Return strict JSON.';
+
+    // Stage 1 — process image (DICOM convert if needed, deid, hash)
+    const processed = await processForVision(req.file.path, req.file.originalname, req.file.mimetype, {
+      deidentify: req.body.skip_deid !== 'true',
+    });
+
+    // Stage 2 — real medical-AI classifier (Replicate)
+    const classifier = await runMedicalClassifier('trauma', processed.buffer);
+
+    // Stage 3 — LLM narrative, grounded on classifier output
+    const systemPrompt = 'You are a trauma radiology AI specialized in fracture, joint effusion, and dislocation detection on plain X-rays. You are given a real medical classifier\'s probability output as evidence — interpret it conservatively and reconcile any disagreement between the classifier and what you see. Return strict JSON.';
+    const classifierEvidence = classifier.ok
+      ? `CLASSIFIER OUTPUT (real medical model, ${classifier.model_ref}):\n${JSON.stringify(classifier.output, null, 2)}`
+      : `CLASSIFIER STATUS: ${classifier.skipped ? `skipped (${classifier.reason})` : `error (${classifier.error || 'unknown'})`}. Proceed using image alone.`;
     const prompt = `Analyze this trauma X-ray.
 Body region: ${body_region || 'unspecified'}
 Patient age: ${patient_age || 'unspecified'}
+
+${classifierEvidence}
 
 Return JSON:
 - fractures: array of {location, type (transverse/oblique/comminuted/spiral/greenstick), displacement_mm, confidence}
@@ -1010,9 +1055,38 @@ Return JSON:
 - dislocations: array of {joint, direction, confidence}
 - severity: "low" | "moderate" | "severe"
 - pediatric_specific_findings: array of strings (growth plate, buckle, etc.)
-- recommended_imaging: array of strings`;
-    const data = await runVisionAI(req, res, 'trauma-xray-analysis', prompt, systemPrompt, { body_region, patient_age });
-    if (data) res.json(data);
+- recommended_imaging: array of strings
+- classifier_agreement: boolean (does your interpretation match the classifier?)
+- classifier_notes: string (explain any disagreement)`;
+
+    const imageBase64 = processed.buffer.toString('base64');
+    const response = await callOpenRouter(prompt, systemPrompt, { imageBase64, mimeType: processed.mimeType, json: true });
+    const content = response.choices[0].message.content;
+    const model = response.model || 'anthropic/claude-3-5-sonnet-20241022';
+    const parsed = parseAIJson(content);
+
+    const inputData = {
+      filename: req.file.originalname,
+      size: req.file.size,
+      image_sha256: processed.sha256,
+      processing: processed.processing,
+      ip_address: req.ip || req.headers['x-forwarded-for'] || null,
+      user_agent: req.headers['user-agent'] || null,
+      body_region, patient_age,
+      classifier_used: classifier.model_ref || null,
+      classifier_status: classifier.ok ? 'ok' : (classifier.skipped ? 'skipped' : 'error'),
+    };
+    await persistAICall(req.user?.id, 'trauma-xray-analysis', inputData, content, model);
+
+    res.json({
+      result: parsed || content,
+      raw: content,
+      model,
+      usage: response.usage,
+      processing: processed.processing,
+      image_sha256: processed.sha256,
+      classifier,
+    });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
