@@ -31,3 +31,10 @@ All three follow the existing pattern (auth + aiRateLimiter, deidentify(), runAI
 - **Frontend wiring:** `client/src/App.js` registers dedicated routes mapping to `AIPriorComparison.js`, `AIProtocolComplianceAudit.js`, `AIIncidentalFindingFlag.js`; each calls the matching endpoint via the shared `API` axios client.
 - **No FE files modified.** Idempotence rule applied.
 - See `_AUDIT/apply3_logs/ab3_60.md` for batch detail.
+
+## Apply pass 6 (close-out)
+- Implemented: `POST /api/ai/patient-friendly-summary` (canonical schema: `{ summary, key_findings_plain, recommended_followups_plain, glossary }`), `POST /api/ai/reporting-template-recommend` (canonical schema: `{ recommended_template_name, sections[{heading,prompts,required_fields}], rationale, alternatives }`)
+- Files touched: `server/routes/ai.js`
+- Syntax check: PASS
+- Duplicate-endpoint note: An earlier undocumented pass already registered `/patient-friendly-summary` (line ~858) and `/reporting-template-recommender` (line ~886, `-er` suffix) with different request/response shapes. Per instructions the canonical versions were appended at the bottom of `ai.js`. Because Express resolves the first registered handler for a given method+path, the canonical `/patient-friendly-summary` is shadowed by the earlier registration; the canonical `/reporting-template-recommend` (no `-er`) is a distinct path and is fully reachable. Recommend a follow-up consolidation pass to remove or rename the legacy `/patient-friendly-summary` and `/reporting-template-recommender` so the canonical schemas are served.
+- Backlog remaining: NEEDS-CREDS (PACS, HL7/FHIR), NEEDS-PRODUCT-DECISION (worklist routing, QA workflow), MECHANICAL (radiation-dose-tracking — needs dose schema decision)

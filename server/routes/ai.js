@@ -58,7 +58,7 @@ async function callOpenRouter(prompt, systemPrompt, options = {}) {
     err.code = 'NO_KEY';
     throw err;
   }
-  const model = options.model || process.env.OPENROUTER_MODEL || 'anthropic/claude-3-5-sonnet-20241022';
+  const model = options.model || process.env.OPENROUTER_MODEL || (process.env.OPENROUTER_MODEL || 'anthropic/claude-haiku-4.5');
 
   const messages = [
     { role: 'system', content: systemPrompt },
@@ -155,7 +155,7 @@ async function runAI(req, res, endpoint, prompt, systemPrompt, inputData, option
   }
   const response = await callOpenRouter(prompt, systemPrompt, { ...options, ...imageOpts });
   const content = response.choices[0].message.content;
-  const model = response.model || options.model || 'anthropic/claude-3-5-sonnet-20241022';
+  const model = response.model || options.model || (process.env.OPENROUTER_MODEL || 'anthropic/claude-haiku-4.5');
   await persistAICall(req.user?.id, endpoint, { ...inputData, ...imageMeta }, content, model);
   return { result: content, model, usage: response.usage, ...imageMeta };
 }
@@ -999,7 +999,7 @@ async function runVisionAI(req, res, endpoint, prompt, systemPrompt, extraInputD
   const imageBase64 = processed.buffer.toString('base64');
   const response = await callOpenRouter(prompt, systemPrompt, { imageBase64, mimeType: processed.mimeType, json: true });
   const content = response.choices[0].message.content;
-  const model = response.model || 'anthropic/claude-3-5-sonnet-20241022';
+  const model = response.model || (process.env.OPENROUTER_MODEL || 'anthropic/claude-haiku-4.5');
   const inputData = {
     filename: req.file.originalname,
     size: req.file.size,
@@ -1081,7 +1081,7 @@ Return JSON:
     const imageBase64 = processed.buffer.toString('base64');
     const response = await callOpenRouter(prompt, systemPrompt, { imageBase64, mimeType: processed.mimeType, json: true });
     const content = response.choices[0].message.content;
-    const model = response.model || 'anthropic/claude-3-5-sonnet-20241022';
+    const model = response.model || (process.env.OPENROUTER_MODEL || 'anthropic/claude-haiku-4.5');
     const parsed = parseAIJson(content);
 
     const inputData = {
@@ -1421,6 +1421,73 @@ Return JSON:
     const data = await runVisionAI(req, res, 'prostate-mri-analysis', prompt, systemPrompt, { psa_ng_ml, prior_biopsy });
     if (data) res.json(data);
   } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── Apply pass 6 (mechanical follow-ups) ──────────────────────────────────
+// NOTE: An earlier undocumented pass added `/patient-friendly-summary` and
+// `/reporting-template-recommender` with different request/response shapes.
+// Per audit instructions we still append the canonical-named versions below.
+// Express matches the FIRST registered handler for a given method+path, so
+// the canonical `/patient-friendly-summary` registration here is shadowed by
+// the earlier one above. The canonical `/reporting-template-recommend`
+// (no `-er` suffix) is a distinct path and is reachable.
+
+// AI Patient-Facing Plain-Language Summary (canonical schema)
+router.post('/patient-friendly-summary', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
+  try {
+    const { report_text, reading_level, language } = req.body;
+    if (!report_text) return res.status(400).json({ error: 'report_text is required' });
+    const level = reading_level || '6th_grade';
+    const lang = language || 'en';
+    const systemPrompt = 'You translate radiology reports into plain-language patient-facing summaries. Preserve clinical accuracy, avoid jargon, and never invent findings. Return strict JSON.';
+    const prompt = `Translate this radiology report for a patient.
+
+Target reading level: ${level}
+Output language (ISO code): ${lang}
+
+REPORT:
+${deidentify(report_text)}
+
+Return JSON with EXACTLY this shape:
+{
+  "summary": "",
+  "key_findings_plain": [],
+  "recommended_followups_plain": [],
+  "glossary": [{"term": "", "plain_meaning": ""}]
+}`;
+    const data = await runAI(req, res, 'patient-friendly-summary', prompt, systemPrompt, { reading_level: level, language: lang });
+    res.json(data);
+  } catch (err) { res.status(aiErrorStatus(err)).json({ error: err.message }); }
+});
+
+// AI Reporting Template Recommender (canonical name + schema)
+router.post('/reporting-template-recommend', auth, aiRateLimiter, upload.single('image'), async (req, res) => {
+  try {
+    const { modality, body_part, indication, patient_history, prior_findings } = req.body;
+    if (!modality || !body_part || !indication) {
+      return res.status(400).json({ error: 'modality, body_part, and indication are required' });
+    }
+    const systemPrompt = 'You recommend the most appropriate structured radiology reporting template (RSNA RadReport / ACR / institutional) based on modality, anatomy, and clinical context. Return strict JSON.';
+    const prompt = `Recommend a structured reporting template.
+
+Modality: ${modality}
+Body Part: ${body_part}
+Clinical Indication: ${deidentify(indication)}
+Patient History: ${deidentify(patient_history || 'none provided')}
+Prior Findings: ${deidentify(prior_findings || 'none provided')}
+
+Return JSON with EXACTLY this shape:
+{
+  "recommended_template_name": "",
+  "sections": [
+    {"heading": "", "prompts": [], "required_fields": []}
+  ],
+  "rationale": "",
+  "alternatives": [{"name": "", "when_to_use": ""}]
+}`;
+    const data = await runAI(req, res, 'reporting-template-recommend', prompt, systemPrompt, { modality, body_part });
+    res.json(data);
+  } catch (err) { res.status(aiErrorStatus(err)).json({ error: err.message }); }
 });
 
 module.exports = router;
