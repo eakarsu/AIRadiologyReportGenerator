@@ -1,79 +1,17 @@
-#!/bin/bash
-
-echo "============================================"
-echo "  AI Radiology Report Generator"
-echo "  Starting Application..."
-echo "============================================"
-
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
-
-PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$PROJECT_DIR"
-
-# Kill processes on ports 3000 and 3001
-echo -e "${YELLOW}Cleaning up used ports...${NC}"
-for PORT in 3000 3001; do
-  PID=$(lsof -ti:$PORT 2>/dev/null)
-  if [ -n "$PID" ]; then
-    echo -e "${RED}Killing process on port $PORT (PID: $PID)${NC}"
-    kill -9 $PID 2>/dev/null
-    sleep 1
-  fi
-done
-echo -e "${GREEN}Ports cleared.${NC}"
-
-# Check PostgreSQL
-echo -e "${BLUE}Checking PostgreSQL...${NC}"
-if ! pg_isready -q 2>/dev/null; then
-  echo -e "${RED}PostgreSQL is not running. Please start it first.${NC}"
-  exit 1
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")" && pwd)"; cd "$ROOT"
+if [ ! -f .env ]; then echo "Missing .env; configure it before starting." >&2; exit 1; fi
+set -a; . ./.env; set +a
+BACKEND_PORT="${BACKEND_PORT:-3001}"; FRONTEND_PORT="${FRONTEND_PORT:-3000}"
+if [ ! -d node_modules ]; then echo "Backend dependencies missing; run scripts/bootstrap.sh explicitly." >&2; exit 1; fi
+for port in "$BACKEND_PORT" "$FRONTEND_PORT"; do if command -v lsof >/dev/null && lsof -ti ":$port" >/dev/null 2>&1; then echo "Port $port is already in use." >&2; exit 1; fi; done
+node server/index.js & BACKEND_PID=$!
+if [ -d web/node_modules ]; then
+  (cd web && PORT="$FRONTEND_PORT" BROWSER=none npm start) & FRONTEND_PID=$!
+else
+  FRONTEND_PID=""
+  echo "Frontend dependencies are not installed; starting the API only." >&2
 fi
-echo -e "${GREEN}PostgreSQL is running.${NC}"
-
-# Install root dependencies
-echo -e "${BLUE}Installing server dependencies...${NC}"
-npm install --silent 2>&1 | tail -1
-
-# Install client dependencies
-echo -e "${BLUE}Installing client dependencies...${NC}"
-cd client && npm install --silent 2>&1 | tail -1
-cd "$PROJECT_DIR"
-
-# Setup database
-echo -e "${BLUE}Setting up database...${NC}"
-node server/setupDb.js
-
-# Wait for DB to be ready
-sleep 1
-
-# Seed data
-echo -e "${BLUE}Seeding database with sample data...${NC}"
-node server/seed.js
-
-echo ""
-echo -e "${GREEN}============================================${NC}"
-echo -e "${GREEN}  Database seeded successfully!${NC}"
-echo -e "${GREEN}============================================${NC}"
-echo ""
-echo -e "${BLUE}Starting servers with hot reload...${NC}"
-echo -e "${YELLOW}  Backend:  http://localhost:3001${NC}"
-echo -e "${YELLOW}  Frontend: http://localhost:3000${NC}"
-echo ""
-echo -e "${GREEN}Login Credentials:${NC}"
-echo -e "  Email:    admin@radiology.com"
-echo -e "  Password: password123"
-echo ""
-echo -e "${YELLOW}Press Ctrl+C to stop all servers${NC}"
-echo ""
-
-# Start with hot reload using concurrently (nodemon for backend, react-scripts for frontend)
-npx concurrently \
-  --names "SERVER,CLIENT" \
-  --prefix-colors "blue,green" \
-  "npx nodemon --watch server server/index.js" \
-  "cd client && BROWSER=none PORT=3000 npm start"
+cleanup() { kill "$BACKEND_PID" ${FRONTEND_PID:+"$FRONTEND_PID"} 2>/dev/null || true; }; trap cleanup EXIT INT TERM
+wait
