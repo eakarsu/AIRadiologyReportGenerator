@@ -59,6 +59,7 @@ async function callOpenRouter(prompt, systemPrompt, options = {}) {
     throw err;
   }
   const model = options.model || process.env.OPENROUTER_MODEL || (process.env.OPENROUTER_MODEL || 'anthropic/claude-haiku-4.5');
+  const baseUrl = new URL(process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1');
 
   const messages = [
     { role: 'system', content: systemPrompt },
@@ -85,8 +86,9 @@ async function callOpenRouter(prompt, systemPrompt, options = {}) {
 
   return new Promise((resolve, reject) => {
     const req = https.request({
-      hostname: 'openrouter.ai',
-      path: '/api/v1/chat/completions',
+      hostname: baseUrl.hostname,
+      port: baseUrl.port || 443,
+      path: `${baseUrl.pathname.replace(/\/$/, '')}/chat/completions`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -100,7 +102,9 @@ async function callOpenRouter(prompt, systemPrompt, options = {}) {
       res.on('end', () => {
         try {
           const parsed = JSON.parse(data);
-          if (parsed.error) reject(new Error(parsed.error.message || 'OpenRouter API error'));
+          if (res.statusCode < 200 || res.statusCode >= 300) reject(new Error(parsed.error?.message || `OpenRouter HTTP ${res.statusCode}`));
+          else if (parsed.error) reject(new Error(parsed.error.message || 'OpenRouter API error'));
+          else if (!parsed.choices?.[0]?.message?.content?.trim()) reject(new Error('OpenRouter returned an empty response'));
           else resolve(parsed);
         } catch (e) {
           reject(new Error('Failed to parse API response'));

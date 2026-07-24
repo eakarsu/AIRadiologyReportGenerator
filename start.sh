@@ -6,7 +6,7 @@ set -a; . ./.env; set +a
 BACKEND_PORT="${BACKEND_PORT:-3001}"; FRONTEND_PORT="${FRONTEND_PORT:-3000}"
 if [ ! -d node_modules ]; then echo "Backend dependencies missing; run scripts/bootstrap.sh explicitly." >&2; exit 1; fi
 for port in "$BACKEND_PORT" "$FRONTEND_PORT"; do if command -v lsof >/dev/null && lsof -ti ":$port" >/dev/null 2>&1; then echo "Port $port is already in use." >&2; exit 1; fi; done
-node server/index.js & BACKEND_PID=$!
+PORT="$BACKEND_PORT" node server/index.js & BACKEND_PID=$!
 if [ -d web/node_modules ]; then
   (cd web && PORT="$FRONTEND_PORT" BROWSER=none npm start) & FRONTEND_PID=$!
 else
