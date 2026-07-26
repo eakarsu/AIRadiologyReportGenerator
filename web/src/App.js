@@ -6,10 +6,24 @@ const FEATURES = [
   "Draft a structured report",
   "Route critical findings for review"
 ];
-const API_BASE = process.env.REACT_APP_API_URL || '';
+const PRODUCT_NAME = 'AI Radiology Report Generator';
+const configuredApiBase = process.env.REACT_APP_API_URL || '';
+const API_BASE = typeof window === 'undefined' ? configuredApiBase : configuredApiBase.replace(/127\.0\.0\.1|localhost/, window.location.hostname);
+
+async function api(path, options = {}) {
+  const response = await fetch(`${API_BASE}${path}`, { ...options, headers: { Accept: 'application/json', 'Content-Type': 'application/json', ...options.headers } });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.error || body.message || `Request failed with HTTP ${response.status}`);
+  return body;
+}
 
 export default function App() {
   const [service, setService] = useState({ status: 'loading', detail: 'Checking the API boundary…' });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [user, setUser] = useState(null);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
 
   const checkService = async () => {
     setService({ status: 'loading', detail: 'Checking the API boundary…' });
@@ -23,6 +37,17 @@ export default function App() {
   };
 
   useEffect(() => { checkService(); }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    api('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } }).then((body) => setUser(body.user || body)).catch(() => localStorage.removeItem('authToken'));
+  }, []);
+
+  const fillDemoCredentials = async () => { setError(''); setBusy(true); try { const credentials = await api('/api/auth/demo-credentials'); setEmail(credentials.email); setPassword(credentials.password); } catch (requestError) { setError(requestError.message); } finally { setBusy(false); } };
+  const handleLogin = async (event) => { event.preventDefault(); setError(''); setBusy(true); try { const result = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }); localStorage.setItem('authToken', result.token); const identity = await api('/api/auth/me', { headers: { Authorization: `Bearer ${result.token}` } }); setUser(identity.user || identity); } catch (requestError) { localStorage.removeItem('authToken'); setError(requestError.message); } finally { setBusy(false); } };
+
+  if (!user) return <main className="login-shell"><form className="login-card" onSubmit={handleLogin}><p className="eyebrow">{PRODUCT_NAME}</p><h1>Sign in to your workspace</h1><p className="lede">Use the provisioned local account to continue.</p>{error && <p className="form-error" role="alert">{error}</p>}<label>Email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required autoComplete="username" /></label><label>Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required autoComplete="current-password" /></label><button className="demo-button" type="button" onClick={fillDemoCredentials} disabled={busy}>Auto Fill Demo Credentials</button><button className="primary-button" type="submit" disabled={busy}>{busy ? 'Please wait…' : 'Sign In'}</button></form></main>;
 
   return (
     <main className="shell">

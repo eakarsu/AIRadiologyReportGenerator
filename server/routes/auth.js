@@ -3,6 +3,14 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
 
+router.get('/demo-credentials', (_req, res) => {
+  if (process.env.NODE_ENV === 'production') return res.status(404).json({ error: 'Not found' });
+  const email = process.env.DEMO_EMAIL || process.env.PROVISION_ADMIN_EMAIL;
+  const password = process.env.DEMO_PASSWORD || process.env.PROVISION_ADMIN_PASSWORD;
+  if (!email || !password) return res.status(503).json({ error: 'Demo credentials are not configured' });
+  return res.json({ email, password });
+});
+
 router.post('/register', async (req, res) => {
   try {
     const { email, password, name } = req.body;
