@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import './App.css';
+import DecisionCenter from './DecisionCenter';
 
 const FEATURES = [
   "Open the study worklist",
@@ -73,6 +74,7 @@ export default function App() {
           ))}
         </div>
       </section>
+      <DecisionCenter />
     </main>
   );
 }
