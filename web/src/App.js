@@ -46,7 +46,8 @@ export default function App() {
   }, []);
 
   const fillDemoCredentials = async () => { setError(''); setBusy(true); try { const credentials = await api('/api/auth/demo-credentials'); setEmail(credentials.email); setPassword(credentials.password)
-      window.setTimeout(() => { const __f = document.querySelector('form'); if (__f) __f.requestSubmit(); }, 60);; } catch (requestError) { setError(requestError.message); } finally { setBusy(false); } };
+
+} catch (requestError) { setError(requestError.message); } finally { setBusy(false); } };
   const handleLogin = async (event) => { event.preventDefault(); setError(''); setBusy(true); try { const result = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }); localStorage.setItem('authToken', result.token); const identity = await api('/api/auth/me', { headers: { Authorization: `Bearer ${result.token}` } }); setUser(identity.user || identity); } catch (requestError) { localStorage.removeItem('authToken'); setError(requestError.message); } finally { setBusy(false); } };
 
   if (!user) return <main className="login-shell"><form className="login-card" onSubmit={handleLogin}><p className="eyebrow">{PRODUCT_NAME}</p><h1>Sign in to your workspace</h1><p className="lede">Use the provisioned local account to continue.</p>{error && <p className="form-error" role="alert">{error}</p>}<label>Email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required autoComplete="username" /></label><label>Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required autoComplete="current-password" /></label><button className="demo-button" type="button" onClick={fillDemoCredentials} disabled={busy}>Auto Fill Demo Credentials</button><button className="primary-button" type="submit" disabled={busy}>{busy ? 'Please wait…' : 'Sign In'}</button></form></main>;
