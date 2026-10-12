@@ -12,7 +12,7 @@ export default function WorkflowSidebar({ title, features }) {
     <div className="codex-workflow-brand"><strong>{title}</strong><span>Workspace</span></div>
     <label htmlFor="codex-workflow-search">Find a section</label>
     <input id="codex-workflow-search" type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Search navigation" />
-    <nav aria-label="Sections">
+    <nav aria-label="Sections"><a href="#native-ai-studio">AI workspace</a>
       {sections.map(section => <a key={section.id} href={`#${section.id}`}>{section.label}</a>)}
       {sections.length === 0 && <p>No matching sections</p>}
     </nav>

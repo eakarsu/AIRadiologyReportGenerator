@@ -924,16 +924,16 @@ router.get('/history', auth, async (req, res) => {
     const offset = (page - 1) * limit;
     const endpoint = req.query.endpoint || null;
 
-    let whereClause = '';
-    const params = [limit, offset];
+    let whereClause = 'WHERE user_id = $3';
+    const params = [limit, offset, req.user.id];
     if (endpoint) {
-      whereClause = 'WHERE endpoint = $3';
+      whereClause += ' AND endpoint = $4';
       params.push(endpoint);
     }
 
     const countResult = await db.query(
-      `SELECT COUNT(*) FROM ai_analyses ${endpoint ? 'WHERE endpoint = $1' : ''}`,
-      endpoint ? [endpoint] : []
+      `SELECT COUNT(*) FROM ai_analyses WHERE user_id = $1${endpoint ? ' AND endpoint = $2' : ''}`,
+      endpoint ? [req.user.id, endpoint] : [req.user.id]
     );
     const total = parseInt(countResult.rows[0].count);
 
@@ -950,6 +950,17 @@ router.get('/history', auth, async (req, res) => {
     res.set({ 'X-Total-Count': String(total), 'X-Page': String(page), 'X-Limit': String(limit), 'X-Total-Pages': String(totalPages) });
     res.json(result.rows);
   } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.get('/history/:id', auth, async (req, res) => {
+  try {
+    const result = await db.query(
+      'SELECT id, endpoint, result, model, tokens_used, created_at FROM ai_analyses WHERE id = $1 AND user_id = $2',
+      [req.params.id, req.user.id]
+    );
+    if (!result.rows.length) return res.status(404).json({ error: 'Saved AI result not found' });
+    return res.json(result.rows[0]);
+  } catch (err) { return res.status(500).json({ error: err.message }); }
 });
 
 // ═══════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,10 @@
+.native-ai-scope { min-width: 0; }
+.native-ai-controls { margin: 0 0 18px; padding: 16px; border: 1px solid var(--border-color, #cbd5e1); border-radius: 12px; background: var(--bg-secondary, #f8fafc); color: var(--text-primary, #182339); }
+.native-ai-controls strong { display: block; margin-bottom: 4px; font-size: 15px; }
+.native-ai-controls span { display: block; color: var(--text-secondary, #64748b); font-size: 13px; line-height: 1.5; }
+.native-ai-control-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.native-ai-control-buttons button { padding: 9px 12px; border: 1px solid var(--border-color, #cbd5e1); border-radius: 8px; font: inherit; font-size: 13px; font-weight: 600; background: var(--bg-input, #fff); color: inherit; cursor: pointer; }
+.native-ai-control-buttons button:hover { border-color: #7663d5; }
+.native-ai-control-buttons button:disabled { opacity: .55; cursor: not-allowed; }
+.native-ai-control-buttons .native-ai-cancel { color: #a62636; border-color: #d99aa2; }
+.native-ai-controls p { margin: 10px 0 0; font-size: 13px; line-height: 1.6; }

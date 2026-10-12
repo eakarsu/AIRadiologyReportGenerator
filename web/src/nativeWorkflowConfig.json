@@ -1,0 +1,2474 @@
+{
+  "title": "Radiology native AI workspace",
+  "features": [
+    {
+      "id": "generate-report",
+      "endpoint": "/api/ai/generate-report",
+      "title": "Generate report",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "study_description",
+          "type": "text",
+          "required": false,
+          "label": "Study description",
+          "presets": [
+            "Example study description 1",
+            "Example study description 2",
+            "Example study description 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "modality",
+          "type": "text",
+          "required": false,
+          "label": "Modality",
+          "presets": [
+            "Example modality 1",
+            "Example modality 2",
+            "Example modality 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "body_part",
+          "type": "text",
+          "required": false,
+          "label": "Body part",
+          "presets": [
+            "Example body part 1",
+            "Example body part 2",
+            "Example body part 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "clinical_indication",
+          "type": "text",
+          "required": false,
+          "label": "Clinical indication",
+          "presets": [
+            "Example clinical indication 1",
+            "Example clinical indication 2",
+            "Example clinical indication 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "patient_age",
+          "type": "text",
+          "required": false,
+          "label": "Patient age",
+          "presets": [
+            "Example patient age 1",
+            "Example patient age 2",
+            "Example patient age 3"
+          ],
+          "manual": true
+        },
+        {
+          "key": "patient_gender",
+          "type": "text",
+          "required": false,
+          "label": "Patient gender",
+          "presets": [
+            "Example patient gender 1",
+            "Example patient gender 2",
+            "Example patient gender 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 177
+      }
+    },
+    {
+      "id": "extract-findings",
+      "endpoint": "/api/ai/extract-findings",
+      "title": "Extract findings",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "report_text",
+          "type": "text",
+          "required": false,
+          "label": "Report text",
+          "presets": [
+            "Illustrative report text: prepare a concise review. Use the supplied information and identify missing evidence.",
+            "Illustrative report text: prepare a team planning review. Use the supplied information and identify missing evidence.",
+            "Illustrative report text: compare alternatives and explain assumptions. Use the supplied information and identify missing evidence."
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 200
+      }
+    },
+    {
+      "id": "suggest-diagnosis",
+      "endpoint": "/api/ai/suggest-diagnosis",
+      "title": "Suggest diagnosis",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "findings",
+          "type": "text",
+          "required": false,
+          "label": "Findings",
+          "presets": [
+            "Example findings 1",
+            "Example findings 2",
+            "Example findings 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "clinical_history",
+          "type": "text",
+          "required": false,
+          "label": "Clinical history",
+          "presets": [
+            "Example clinical history 1",
+            "Example clinical history 2",
+            "Example clinical history 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "modality",
+          "type": "text",
+          "required": false,
+          "label": "Modality",
+          "presets": [
+            "Example modality 1",
+            "Example modality 2",
+            "Example modality 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 221
+      }
+    },
+    {
+      "id": "summarize-report",
+      "endpoint": "/api/ai/summarize-report",
+      "title": "Summarize report",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "report_text",
+          "type": "text",
+          "required": false,
+          "label": "Report text",
+          "presets": [
+            "Illustrative report text: prepare a concise review. Use the supplied information and identify missing evidence.",
+            "Illustrative report text: prepare a team planning review. Use the supplied information and identify missing evidence.",
+            "Illustrative report text: compare alternatives and explain assumptions. Use the supplied information and identify missing evidence."
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 243
+      }
+    },
+    {
+      "id": "detect-critical",
+      "endpoint": "/api/ai/detect-critical",
+      "title": "Detect critical",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "report_text",
+          "type": "text",
+          "required": false,
+          "label": "Report text",
+          "presets": [
+            "Illustrative report text: prepare a concise review. Use the supplied information and identify missing evidence.",
+            "Illustrative report text: prepare a team planning review. Use the supplied information and identify missing evidence.",
+            "Illustrative report text: compare alternatives and explain assumptions. Use the supplied information and identify missing evidence."
+          ],
+          "manual": false
+        },
+        {
+          "key": "findings",
+          "type": "text",
+          "required": false,
+          "label": "Findings",
+          "presets": [
+            "Example findings 1",
+            "Example findings 2",
+            "Example findings 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 262
+      }
+    },
+    {
+      "id": "quality-check",
+      "endpoint": "/api/ai/quality-check",
+      "title": "Quality check",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "report_text",
+          "type": "text",
+          "required": false,
+          "label": "Report text",
+          "presets": [
+            "Illustrative report text: prepare a concise review. Use the supplied information and identify missing evidence.",
+            "Illustrative report text: prepare a team planning review. Use the supplied information and identify missing evidence.",
+            "Illustrative report text: compare alternatives and explain assumptions. Use the supplied information and identify missing evidence."
+          ],
+          "manual": false
+        },
+        {
+          "key": "modality",
+          "type": "text",
+          "required": false,
+          "label": "Modality",
+          "presets": [
+            "Example modality 1",
+            "Example modality 2",
+            "Example modality 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "body_part",
+          "type": "text",
+          "required": false,
+          "label": "Body part",
+          "presets": [
+            "Example body part 1",
+            "Example body part 2",
+            "Example body part 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 284
+      }
+    },
+    {
+      "id": "patient-summary",
+      "endpoint": "/api/ai/patient-summary",
+      "title": "Patient summary",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "report_text",
+          "type": "text",
+          "required": false,
+          "label": "Report text",
+          "presets": [
+            "Illustrative report text: prepare a concise review. Use the supplied information and identify missing evidence.",
+            "Illustrative report text: prepare a team planning review. Use the supplied information and identify missing evidence.",
+            "Illustrative report text: compare alternatives and explain assumptions. Use the supplied information and identify missing evidence."
+          ],
+          "manual": false
+        },
+        {
+          "key": "patient_name",
+          "type": "text",
+          "required": false,
+          "label": "Patient name",
+          "presets": [
+            "Example patient name 1",
+            "Example patient name 2",
+            "Example patient name 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 310
+      }
+    },
+    {
+      "id": "differential-diagnosis",
+      "endpoint": "/api/ai/differential-diagnosis",
+      "title": "Differential diagnosis",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "imaging_findings",
+          "type": "text",
+          "required": false,
+          "label": "Imaging findings",
+          "presets": [
+            "Example imaging findings 1",
+            "Example imaging findings 2",
+            "Example imaging findings 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "patient_age",
+          "type": "text",
+          "required": false,
+          "label": "Patient age",
+          "presets": [
+            "Example patient age 1",
+            "Example patient age 2",
+            "Example patient age 3"
+          ],
+          "manual": true
+        },
+        {
+          "key": "patient_gender",
+          "type": "text",
+          "required": false,
+          "label": "Patient gender",
+          "presets": [
+            "Example patient gender 1",
+            "Example patient gender 2",
+            "Example patient gender 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "clinical_history",
+          "type": "text",
+          "required": false,
+          "label": "Clinical history",
+          "presets": [
+            "Example clinical history 1",
+            "Example clinical history 2",
+            "Example clinical history 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 331
+      }
+    },
+    {
+      "id": "follow-up-recommendations",
+      "endpoint": "/api/ai/follow-up-recommendations",
+      "title": "Follow up recommendations",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "findings",
+          "type": "text",
+          "required": false,
+          "label": "Findings",
+          "presets": [
+            "Example findings 1",
+            "Example findings 2",
+            "Example findings 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "modality",
+          "type": "text",
+          "required": false,
+          "label": "Modality",
+          "presets": [
+            "Example modality 1",
+            "Example modality 2",
+            "Example modality 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "body_part",
+          "type": "text",
+          "required": false,
+          "label": "Body part",
+          "presets": [
+            "Example body part 1",
+            "Example body part 2",
+            "Example body part 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "clinical_context",
+          "type": "text",
+          "required": false,
+          "label": "Clinical context",
+          "presets": [
+            "Illustrative clinical context: prepare a concise review. Use the supplied information and identify missing evidence.",
+            "Illustrative clinical context: prepare a team planning review. Use the supplied information and identify missing evidence.",
+            "Illustrative clinical context: compare alternatives and explain assumptions. Use the supplied information and identify missing evidence."
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 354
+      }
+    },
+    {
+      "id": "compare-reports",
+      "endpoint": "/api/ai/compare-reports",
+      "title": "Compare reports",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "current_report",
+          "type": "text",
+          "required": false,
+          "label": "Current report",
+          "presets": [
+            "Example current report 1",
+            "Example current report 2",
+            "Example current report 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "prior_report",
+          "type": "text",
+          "required": false,
+          "label": "Prior report",
+          "presets": [
+            "Example prior report 1",
+            "Example prior report 2",
+            "Example prior report 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 378
+      }
+    },
+    {
+      "id": "patient-risk",
+      "endpoint": "/api/ai/patient-risk",
+      "title": "Patient risk",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "patient_age",
+          "type": "text",
+          "required": false,
+          "label": "Patient age",
+          "presets": [
+            "Example patient age 1",
+            "Example patient age 2",
+            "Example patient age 3"
+          ],
+          "manual": true
+        },
+        {
+          "key": "patient_gender",
+          "type": "text",
+          "required": false,
+          "label": "Patient gender",
+          "presets": [
+            "Example patient gender 1",
+            "Example patient gender 2",
+            "Example patient gender 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "medical_history",
+          "type": "text",
+          "required": false,
+          "label": "Medical history",
+          "presets": [
+            "Example medical history 1",
+            "Example medical history 2",
+            "Example medical history 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "allergies",
+          "type": "text",
+          "required": false,
+          "label": "Allergies",
+          "presets": [
+            "Example allergies 1",
+            "Example allergies 2",
+            "Example allergies 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "current_findings",
+          "type": "text",
+          "required": false,
+          "label": "Current findings",
+          "presets": [
+            "Example current findings 1",
+            "Example current findings 2",
+            "Example current findings 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 405
+      }
+    },
+    {
+      "id": "protocol-recommendation",
+      "endpoint": "/api/ai/protocol-recommendation",
+      "title": "Protocol recommendation",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "clinical_indication",
+          "type": "text",
+          "required": false,
+          "label": "Clinical indication",
+          "presets": [
+            "Example clinical indication 1",
+            "Example clinical indication 2",
+            "Example clinical indication 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "body_part",
+          "type": "text",
+          "required": false,
+          "label": "Body part",
+          "presets": [
+            "Example body part 1",
+            "Example body part 2",
+            "Example body part 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "patient_age",
+          "type": "text",
+          "required": false,
+          "label": "Patient age",
+          "presets": [
+            "Example patient age 1",
+            "Example patient age 2",
+            "Example patient age 3"
+          ],
+          "manual": true
+        },
+        {
+          "key": "patient_gender",
+          "type": "text",
+          "required": false,
+          "label": "Patient gender",
+          "presets": [
+            "Example patient gender 1",
+            "Example patient gender 2",
+            "Example patient gender 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "prior_studies",
+          "type": "text",
+          "required": false,
+          "label": "Prior studies",
+          "presets": [
+            "Example prior studies 1",
+            "Example prior studies 2",
+            "Example prior studies 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 431
+      }
+    },
+    {
+      "id": "workload-analysis",
+      "endpoint": "/api/ai/workload-analysis",
+      "title": "Workload analysis",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "radiologist_name",
+          "type": "text",
+          "required": false,
+          "label": "Radiologist name",
+          "presets": [
+            "Example radiologist name 1",
+            "Example radiologist name 2",
+            "Example radiologist name 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "specialization",
+          "type": "text",
+          "required": false,
+          "label": "Specialization",
+          "presets": [
+            "Example specialization 1",
+            "Example specialization 2",
+            "Example specialization 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "reports_today",
+          "type": "text",
+          "required": false,
+          "label": "Reports today",
+          "presets": [
+            "Example reports today 1",
+            "Example reports today 2",
+            "Example reports today 3"
+          ],
+          "manual": true
+        },
+        {
+          "key": "accuracy_rate",
+          "type": "text",
+          "required": false,
+          "label": "Accuracy rate",
+          "presets": [
+            "Example accuracy rate 1",
+            "Example accuracy rate 2",
+            "Example accuracy rate 3"
+          ],
+          "manual": true
+        },
+        {
+          "key": "shift",
+          "type": "text",
+          "required": false,
+          "label": "Shift",
+          "presets": [
+            "Example shift 1",
+            "Example shift 2",
+            "Example shift 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "years_experience",
+          "type": "text",
+          "required": false,
+          "label": "Years experience",
+          "presets": [
+            "Example years experience 1",
+            "Example years experience 2",
+            "Example years experience 3"
+          ],
+          "manual": true
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 457
+      }
+    },
+    {
+      "id": "modality-selection",
+      "endpoint": "/api/ai/modality-selection",
+      "title": "Modality selection",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "clinical_question",
+          "type": "text",
+          "required": false,
+          "label": "Clinical question",
+          "presets": [
+            "Example clinical question 1",
+            "Example clinical question 2",
+            "Example clinical question 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "body_region",
+          "type": "text",
+          "required": false,
+          "label": "Body region",
+          "presets": [
+            "Example body region 1",
+            "Example body region 2",
+            "Example body region 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "patient_age",
+          "type": "text",
+          "required": false,
+          "label": "Patient age",
+          "presets": [
+            "Example patient age 1",
+            "Example patient age 2",
+            "Example patient age 3"
+          ],
+          "manual": true
+        },
+        {
+          "key": "patient_gender",
+          "type": "text",
+          "required": false,
+          "label": "Patient gender",
+          "presets": [
+            "Example patient gender 1",
+            "Example patient gender 2",
+            "Example patient gender 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "contraindications",
+          "type": "text",
+          "required": false,
+          "label": "Contraindications",
+          "presets": [
+            "Example contraindications 1",
+            "Example contraindications 2",
+            "Example contraindications 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "prior_imaging",
+          "type": "text",
+          "required": false,
+          "label": "Prior imaging",
+          "presets": [
+            "Example prior imaging 1",
+            "Example prior imaging 2",
+            "Example prior imaging 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 485
+      }
+    },
+    {
+      "id": "generate-template",
+      "endpoint": "/api/ai/generate-template",
+      "title": "Generate template",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "modality",
+          "type": "text",
+          "required": false,
+          "label": "Modality",
+          "presets": [
+            "Example modality 1",
+            "Example modality 2",
+            "Example modality 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "body_part",
+          "type": "text",
+          "required": false,
+          "label": "Body part",
+          "presets": [
+            "Example body part 1",
+            "Example body part 2",
+            "Example body part 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "exam_type",
+          "type": "text",
+          "required": false,
+          "label": "Exam type",
+          "presets": [
+            "Example exam type 1",
+            "Example exam type 2",
+            "Example exam type 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "specialty_focus",
+          "type": "text",
+          "required": false,
+          "label": "Specialty focus",
+          "presets": [
+            "Example specialty focus 1",
+            "Example specialty focus 2",
+            "Example specialty focus 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 512
+      }
+    },
+    {
+      "id": "billing-suggestion",
+      "endpoint": "/api/ai/billing-suggestion",
+      "title": "Billing suggestion",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "study_description",
+          "type": "text",
+          "required": false,
+          "label": "Study description",
+          "presets": [
+            "Example study description 1",
+            "Example study description 2",
+            "Example study description 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "modality",
+          "type": "text",
+          "required": false,
+          "label": "Modality",
+          "presets": [
+            "Example modality 1",
+            "Example modality 2",
+            "Example modality 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "body_part",
+          "type": "text",
+          "required": false,
+          "label": "Body part",
+          "presets": [
+            "Example body part 1",
+            "Example body part 2",
+            "Example body part 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "contrast_used",
+          "type": "text",
+          "required": false,
+          "label": "Contrast used",
+          "presets": [
+            "Example contrast used 1",
+            "Example contrast used 2",
+            "Example contrast used 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "clinical_indication",
+          "type": "text",
+          "required": false,
+          "label": "Clinical indication",
+          "presets": [
+            "Example clinical indication 1",
+            "Example clinical indication 2",
+            "Example clinical indication 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 538
+      }
+    },
+    {
+      "id": "audit-analysis",
+      "endpoint": "/api/ai/audit-analysis",
+      "title": "Audit analysis",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "audit_summary",
+          "type": "text",
+          "required": false,
+          "label": "Audit summary",
+          "presets": [
+            "Illustrative audit summary: prepare a concise review. Use the supplied information and identify missing evidence.",
+            "Illustrative audit summary: prepare a team planning review. Use the supplied information and identify missing evidence.",
+            "Illustrative audit summary: compare alternatives and explain assumptions. Use the supplied information and identify missing evidence."
+          ],
+          "manual": false
+        },
+        {
+          "key": "time_period",
+          "type": "text",
+          "required": false,
+          "label": "Time period",
+          "presets": [
+            "2026-10-08",
+            "2026-10-08",
+            "2026-10-08"
+          ],
+          "manual": false
+        },
+        {
+          "key": "department",
+          "type": "text",
+          "required": false,
+          "label": "Department",
+          "presets": [
+            "Example department 1",
+            "Example department 2",
+            "Example department 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 566
+      }
+    },
+    {
+      "id": "dose-optimization",
+      "endpoint": "/api/ai/dose-optimization",
+      "title": "Dose optimization",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "modality",
+          "type": "text",
+          "required": false,
+          "label": "Modality",
+          "presets": [
+            "Example modality 1",
+            "Example modality 2",
+            "Example modality 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "body_part",
+          "type": "text",
+          "required": false,
+          "label": "Body part",
+          "presets": [
+            "Example body part 1",
+            "Example body part 2",
+            "Example body part 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "patient_age",
+          "type": "text",
+          "required": false,
+          "label": "Patient age",
+          "presets": [
+            "Example patient age 1",
+            "Example patient age 2",
+            "Example patient age 3"
+          ],
+          "manual": true
+        },
+        {
+          "key": "patient_weight",
+          "type": "number",
+          "required": false,
+          "label": "Patient weight",
+          "presets": [
+            1,
+            1,
+            2
+          ],
+          "manual": true
+        },
+        {
+          "key": "clinical_indication",
+          "type": "text",
+          "required": false,
+          "label": "Clinical indication",
+          "presets": [
+            "Example clinical indication 1",
+            "Example clinical indication 2",
+            "Example clinical indication 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "prior_exams_count",
+          "type": "number",
+          "required": false,
+          "label": "Prior exams count",
+          "presets": [
+            6,
+            8,
+            9
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 592
+      }
+    },
+    {
+      "id": "teaching-case",
+      "endpoint": "/api/ai/teaching-case",
+      "title": "Teaching case",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "findings",
+          "type": "text",
+          "required": false,
+          "label": "Findings",
+          "presets": [
+            "Example findings 1",
+            "Example findings 2",
+            "Example findings 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "modality",
+          "type": "text",
+          "required": false,
+          "label": "Modality",
+          "presets": [
+            "Example modality 1",
+            "Example modality 2",
+            "Example modality 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "diagnosis",
+          "type": "text",
+          "required": false,
+          "label": "Diagnosis",
+          "presets": [
+            "Example diagnosis 1",
+            "Example diagnosis 2",
+            "Example diagnosis 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "difficulty_level",
+          "type": "text",
+          "required": false,
+          "label": "Difficulty level",
+          "presets": [
+            "Example difficulty level 1",
+            "Example difficulty level 2",
+            "Example difficulty level 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 621
+      }
+    },
+    {
+      "id": "dashboard-insights",
+      "endpoint": "/api/ai/dashboard-insights",
+      "title": "Dashboard insights",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "total_patients",
+          "type": "text",
+          "required": false,
+          "label": "Total patients",
+          "presets": [
+            "Example total patients 1",
+            "Example total patients 2",
+            "Example total patients 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "total_studies",
+          "type": "text",
+          "required": false,
+          "label": "Total studies",
+          "presets": [
+            "Example total studies 1",
+            "Example total studies 2",
+            "Example total studies 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "total_reports",
+          "type": "text",
+          "required": false,
+          "label": "Total reports",
+          "presets": [
+            "Example total reports 1",
+            "Example total reports 2",
+            "Example total reports 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "pending_studies",
+          "type": "text",
+          "required": false,
+          "label": "Pending studies",
+          "presets": [
+            "Example pending studies 1",
+            "Example pending studies 2",
+            "Example pending studies 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "critical_reports",
+          "type": "text",
+          "required": false,
+          "label": "Critical reports",
+          "presets": [
+            "Example critical reports 1",
+            "Example critical reports 2",
+            "Example critical reports 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "ai_reports",
+          "type": "text",
+          "required": false,
+          "label": "Ai reports",
+          "presets": [
+            "Example ai reports 1",
+            "Example ai reports 2",
+            "Example ai reports 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "active_radiologists",
+          "type": "text",
+          "required": false,
+          "label": "Active radiologists",
+          "presets": [
+            "Example active radiologists 1",
+            "Example active radiologists 2",
+            "Example active radiologists 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 649
+      }
+    },
+    {
+      "id": "prior-comparison",
+      "endpoint": "/api/ai/prior-comparison",
+      "title": "Prior comparison",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "patient_id",
+          "type": "text",
+          "required": false,
+          "label": "Patient id",
+          "presets": [
+            "Example patient id 1",
+            "Example patient id 2",
+            "Example patient id 3"
+          ],
+          "manual": true
+        },
+        {
+          "key": "current_report",
+          "type": "text",
+          "required": false,
+          "label": "Current report",
+          "presets": [
+            "Example current report 1",
+            "Example current report 2",
+            "Example current report 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "prior_reports",
+          "type": "json",
+          "required": false,
+          "label": "Prior reports",
+          "presets": [
+            [
+              "Illustrative source item 1"
+            ],
+            [
+              "Illustrative source item 2"
+            ],
+            [
+              "Illustrative source item 3"
+            ]
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 741
+      }
+    },
+    {
+      "id": "protocol-compliance-audit",
+      "endpoint": "/api/ai/protocol-compliance-audit",
+      "title": "Protocol compliance audit",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "study_protocol",
+          "type": "text",
+          "required": false,
+          "label": "Study protocol",
+          "presets": [
+            "Example study protocol 1",
+            "Example study protocol 2",
+            "Example study protocol 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "modality",
+          "type": "text",
+          "required": false,
+          "label": "Modality",
+          "presets": [
+            "Example modality 1",
+            "Example modality 2",
+            "Example modality 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "clinical_indication",
+          "type": "text",
+          "required": false,
+          "label": "Clinical indication",
+          "presets": [
+            "Example clinical indication 1",
+            "Example clinical indication 2",
+            "Example clinical indication 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "institution_standard",
+          "type": "text",
+          "required": false,
+          "label": "Institution standard",
+          "presets": [
+            "Example institution standard 1",
+            "Example institution standard 2",
+            "Example institution standard 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 771
+      }
+    },
+    {
+      "id": "incidental-finding-flag",
+      "endpoint": "/api/ai/incidental-finding-flag",
+      "title": "Incidental finding flag",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "report_text",
+          "type": "text",
+          "required": false,
+          "label": "Report text",
+          "presets": [
+            "Illustrative report text: prepare a concise review. Use the supplied information and identify missing evidence.",
+            "Illustrative report text: prepare a team planning review. Use the supplied information and identify missing evidence.",
+            "Illustrative report text: compare alternatives and explain assumptions. Use the supplied information and identify missing evidence."
+          ],
+          "manual": false
+        },
+        {
+          "key": "clinical_indication",
+          "type": "text",
+          "required": false,
+          "label": "Clinical indication",
+          "presets": [
+            "Example clinical indication 1",
+            "Example clinical indication 2",
+            "Example clinical indication 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 798
+      }
+    },
+    {
+      "id": "radiation-dose-tracking",
+      "endpoint": "/api/ai/radiation-dose-tracking",
+      "title": "Radiation dose tracking",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "patient_id",
+          "type": "text",
+          "required": false,
+          "label": "Patient id",
+          "presets": [
+            "Example patient id 1",
+            "Example patient id 2",
+            "Example patient id 3"
+          ],
+          "manual": true
+        },
+        {
+          "key": "dose_history",
+          "type": "json",
+          "required": false,
+          "label": "Dose history",
+          "presets": [
+            [
+              "Illustrative source item 1"
+            ],
+            [
+              "Illustrative source item 2"
+            ],
+            [
+              "Illustrative source item 3"
+            ]
+          ],
+          "manual": true
+        },
+        {
+          "key": "modality",
+          "type": "text",
+          "required": false,
+          "label": "Modality",
+          "presets": [
+            "Example modality 1",
+            "Example modality 2",
+            "Example modality 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "body_part",
+          "type": "text",
+          "required": false,
+          "label": "Body part",
+          "presets": [
+            "Example body part 1",
+            "Example body part 2",
+            "Example body part 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "current_exam_dose",
+          "type": "text",
+          "required": false,
+          "label": "Current exam dose",
+          "presets": [
+            "Example current exam dose 1",
+            "Example current exam dose 2",
+            "Example current exam dose 3"
+          ],
+          "manual": true
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 831
+      }
+    },
+    {
+      "id": "patient-friendly-summary",
+      "endpoint": "/api/ai/patient-friendly-summary",
+      "title": "Patient friendly summary",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "report_text",
+          "type": "text",
+          "required": true,
+          "label": "Report text",
+          "presets": [
+            "Illustrative report text: prepare a concise review. Use the supplied information and identify missing evidence.",
+            "Illustrative report text: prepare a team planning review. Use the supplied information and identify missing evidence.",
+            "Illustrative report text: compare alternatives and explain assumptions. Use the supplied information and identify missing evidence."
+          ],
+          "manual": false
+        },
+        {
+          "key": "reading_level",
+          "type": "text",
+          "required": false,
+          "label": "Reading level",
+          "presets": [
+            "Example reading level 1",
+            "Example reading level 2",
+            "Example reading level 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 862
+      }
+    },
+    {
+      "id": "reporting-template-recommender",
+      "endpoint": "/api/ai/reporting-template-recommender",
+      "title": "Reporting template recommender",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "modality",
+          "type": "text",
+          "required": true,
+          "label": "Modality",
+          "presets": [
+            "Example modality 1",
+            "Example modality 2",
+            "Example modality 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "body_part",
+          "type": "text",
+          "required": true,
+          "label": "Body part",
+          "presets": [
+            "Example body part 1",
+            "Example body part 2",
+            "Example body part 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "clinical_indication",
+          "type": "text",
+          "required": false,
+          "label": "Clinical indication",
+          "presets": [
+            "Example clinical indication 1",
+            "Example clinical indication 2",
+            "Example clinical indication 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "sub_specialty",
+          "type": "text",
+          "required": false,
+          "label": "Sub specialty",
+          "presets": [
+            "Example sub specialty 1",
+            "Example sub specialty 2",
+            "Example sub specialty 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 890
+      }
+    },
+    {
+      "id": "narrative-from-image",
+      "endpoint": "/api/ai/narrative-from-image",
+      "title": "Narrative from image",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": true,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "modality",
+          "type": "text",
+          "required": false,
+          "label": "Modality",
+          "presets": [
+            "Example modality 1",
+            "Example modality 2",
+            "Example modality 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "patient_context",
+          "type": "text",
+          "required": false,
+          "label": "Patient context",
+          "presets": [
+            "Illustrative patient context: prepare a concise review. Use the supplied information and identify missing evidence.",
+            "Illustrative patient context: prepare a team planning review. Use the supplied information and identify missing evidence.",
+            "Illustrative patient context: compare alternatives and explain assumptions. Use the supplied information and identify missing evidence."
+          ],
+          "manual": false
+        },
+        {
+          "key": "body_part",
+          "type": "text",
+          "required": false,
+          "label": "Body part",
+          "presets": [
+            "Example body part 1",
+            "Example body part 2",
+            "Example body part 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 1029
+      }
+    },
+    {
+      "id": "poc-ultrasound-fracture",
+      "endpoint": "/api/ai/poc-ultrasound-fracture",
+      "title": "Poc ultrasound fracture",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": true,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "anatomical_site",
+          "type": "text",
+          "required": false,
+          "label": "Anatomical site",
+          "presets": [
+            "Example anatomical site 1",
+            "Example anatomical site 2",
+            "Example anatomical site 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "operator_role",
+          "type": "text",
+          "required": false,
+          "label": "Operator role",
+          "presets": [
+            "Example operator role 1",
+            "Example operator role 2",
+            "Example operator role 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 1117
+      }
+    },
+    {
+      "id": "echo-aortic-stenosis",
+      "endpoint": "/api/ai/echo-aortic-stenosis",
+      "title": "Echo aortic stenosis",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": true,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "view",
+          "type": "text",
+          "required": false,
+          "label": "View",
+          "presets": [
+            "Example view 1",
+            "Example view 2",
+            "Example view 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "peak_velocity_ms",
+          "type": "text",
+          "required": false,
+          "label": "Peak velocity ms",
+          "presets": [
+            "Example peak velocity ms 1",
+            "Example peak velocity ms 2",
+            "Example peak velocity ms 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "mean_gradient_mmhg",
+          "type": "text",
+          "required": false,
+          "label": "Mean gradient mmhg",
+          "presets": [
+            "Example mean gradient mmhg 1",
+            "Example mean gradient mmhg 2",
+            "Example mean gradient mmhg 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "ava_cm2",
+          "type": "number",
+          "required": false,
+          "label": "Ava cm2",
+          "presets": [
+            1,
+            1,
+            2
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 1140
+      }
+    },
+    {
+      "id": "cardiac-ct-plaque",
+      "endpoint": "/api/ai/cardiac-ct-plaque",
+      "title": "Cardiac ct plaque",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": true,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "vessel_name",
+          "type": "text",
+          "required": false,
+          "label": "Vessel name",
+          "presets": [
+            "Example vessel name 1",
+            "Example vessel name 2",
+            "Example vessel name 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "slice_location",
+          "type": "text",
+          "required": false,
+          "label": "Slice location",
+          "presets": [
+            "Example slice location 1",
+            "Example slice location 2",
+            "Example slice location 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 1164
+      }
+    },
+    {
+      "id": "calcium-score-plus",
+      "endpoint": "/api/ai/calcium-score-plus",
+      "title": "Calcium score plus",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": true,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "patient_age",
+          "type": "text",
+          "required": false,
+          "label": "Patient age",
+          "presets": [
+            "Example patient age 1",
+            "Example patient age 2",
+            "Example patient age 3"
+          ],
+          "manual": true
+        },
+        {
+          "key": "sex",
+          "type": "text",
+          "required": false,
+          "label": "Sex",
+          "presets": [
+            "Example sex 1",
+            "Example sex 2",
+            "Example sex 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 1231
+      }
+    },
+    {
+      "id": "ct-bone-density",
+      "endpoint": "/api/ai/ct-bone-density",
+      "title": "Ct bone density",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": true,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "vertebral_level",
+          "type": "text",
+          "required": false,
+          "label": "Vertebral level",
+          "presets": [
+            "Example vertebral level 1",
+            "Example vertebral level 2",
+            "Example vertebral level 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "patient_age",
+          "type": "text",
+          "required": false,
+          "label": "Patient age",
+          "presets": [
+            "Example patient age 1",
+            "Example patient age 2",
+            "Example patient age 3"
+          ],
+          "manual": true
+        },
+        {
+          "key": "sex",
+          "type": "text",
+          "required": false,
+          "label": "Sex",
+          "presets": [
+            "Example sex 1",
+            "Example sex 2",
+            "Example sex 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 1254
+      }
+    },
+    {
+      "id": "mr-lumbar-spine-plus",
+      "endpoint": "/api/ai/mr-lumbar-spine-plus",
+      "title": "Mr lumbar spine plus",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": true,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "sequence",
+          "type": "text",
+          "required": false,
+          "label": "Sequence",
+          "presets": [
+            "Example sequence 1",
+            "Example sequence 2",
+            "Example sequence 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "patient_age",
+          "type": "text",
+          "required": false,
+          "label": "Patient age",
+          "presets": [
+            "Example patient age 1",
+            "Example patient age 2",
+            "Example patient age 3"
+          ],
+          "manual": true
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 1277
+      }
+    },
+    {
+      "id": "mammo-10yr-risk",
+      "endpoint": "/api/ai/mammo-10yr-risk",
+      "title": "Mammo 10yr risk",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": true,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "patient_age",
+          "type": "text",
+          "required": false,
+          "label": "Patient age",
+          "presets": [
+            "Example patient age 1",
+            "Example patient age 2",
+            "Example patient age 3"
+          ],
+          "manual": true
+        },
+        {
+          "key": "family_history",
+          "type": "text",
+          "required": false,
+          "label": "Family history",
+          "presets": [
+            "Example family history 1",
+            "Example family history 2",
+            "Example family history 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "density_category",
+          "type": "text",
+          "required": false,
+          "label": "Density category",
+          "presets": [
+            "Example density category 1",
+            "Example density category 2",
+            "Example density category 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "prior_biopsies",
+          "type": "text",
+          "required": false,
+          "label": "Prior biopsies",
+          "presets": [
+            "Example prior biopsies 1",
+            "Example prior biopsies 2",
+            "Example prior biopsies 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "brca_status",
+          "type": "text",
+          "required": false,
+          "label": "Brca status",
+          "presets": [
+            "Example brca status 1",
+            "Example brca status 2",
+            "Example brca status 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 1299
+      }
+    },
+    {
+      "id": "foundation-model-inference",
+      "endpoint": "/api/ai/foundation-model-inference",
+      "title": "Foundation model inference",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": true,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "task",
+          "type": "text",
+          "required": true,
+          "label": "Task",
+          "presets": [
+            "Example task 1",
+            "Example task 2",
+            "Example task 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "output_schema",
+          "type": "text",
+          "required": false,
+          "label": "Output schema",
+          "presets": [
+            "Example output schema 1",
+            "Example output schema 2",
+            "Example output schema 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "model",
+          "type": "text",
+          "required": false,
+          "label": "Model",
+          "presets": [
+            "Example model 1",
+            "Example model 2",
+            "Example model 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 1324
+      }
+    },
+    {
+      "id": "brain-age-estimation",
+      "endpoint": "/api/ai/brain-age-estimation",
+      "title": "Brain age estimation",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": true,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "chronological_age",
+          "type": "text",
+          "required": false,
+          "label": "Chronological age",
+          "presets": [
+            "Example chronological age 1",
+            "Example chronological age 2",
+            "Example chronological age 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "sequence",
+          "type": "text",
+          "required": false,
+          "label": "Sequence",
+          "presets": [
+            "Example sequence 1",
+            "Example sequence 2",
+            "Example sequence 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 1344
+      }
+    },
+    {
+      "id": "brain-health-screen",
+      "endpoint": "/api/ai/brain-health-screen",
+      "title": "Brain health screen",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": true,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "patient_age",
+          "type": "text",
+          "required": false,
+          "label": "Patient age",
+          "presets": [
+            "Example patient age 1",
+            "Example patient age 2",
+            "Example patient age 3"
+          ],
+          "manual": true
+        },
+        {
+          "key": "sequence",
+          "type": "text",
+          "required": false,
+          "label": "Sequence",
+          "presets": [
+            "Example sequence 1",
+            "Example sequence 2",
+            "Example sequence 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 1364
+      }
+    },
+    {
+      "id": "lumbar-mri-analysis",
+      "endpoint": "/api/ai/lumbar-mri-analysis",
+      "title": "Lumbar mri analysis",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": true,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "sequence",
+          "type": "text",
+          "required": false,
+          "label": "Sequence",
+          "presets": [
+            "Example sequence 1",
+            "Example sequence 2",
+            "Example sequence 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "clinical_question",
+          "type": "text",
+          "required": false,
+          "label": "Clinical question",
+          "presets": [
+            "Example clinical question 1",
+            "Example clinical question 2",
+            "Example clinical question 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 1388
+      }
+    },
+    {
+      "id": "prostate-mri-analysis",
+      "endpoint": "/api/ai/prostate-mri-analysis",
+      "title": "Prostate mri analysis",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": true,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "psa_ng_ml",
+          "type": "text",
+          "required": false,
+          "label": "Psa ng ml",
+          "presets": [
+            "Example psa ng ml 1",
+            "Example psa ng ml 2",
+            "Example psa ng ml 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "prior_biopsy",
+          "type": "text",
+          "required": false,
+          "label": "Prior biopsy",
+          "presets": [
+            "Example prior biopsy 1",
+            "Example prior biopsy 2",
+            "Example prior biopsy 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 1408
+      }
+    },
+    {
+      "id": "reporting-template-recommend",
+      "endpoint": "/api/ai/reporting-template-recommend",
+      "title": "Reporting template recommend",
+      "description": "AI draft for qualified clinical review. Illustrative text is clearly labeled; actual images, observations and patient measurements must be supplied. Native de-identification, source processing, permissions and sign-off remain authoritative.",
+      "fields": [
+        {
+          "key": "image",
+          "label": "Actual source image or DICOM (deidentified by the native workflow)",
+          "type": "file",
+          "required": false,
+          "manual": true,
+          "accept": "image/*,.dcm,.dicom"
+        },
+        {
+          "key": "modality",
+          "type": "text",
+          "required": true,
+          "label": "Modality",
+          "presets": [
+            "Example modality 1",
+            "Example modality 2",
+            "Example modality 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "body_part",
+          "type": "text",
+          "required": true,
+          "label": "Body part",
+          "presets": [
+            "Example body part 1",
+            "Example body part 2",
+            "Example body part 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "indication",
+          "type": "text",
+          "required": true,
+          "label": "Indication",
+          "presets": [
+            "Example indication 1",
+            "Example indication 2",
+            "Example indication 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "patient_history",
+          "type": "text",
+          "required": false,
+          "label": "Patient history",
+          "presets": [
+            "Example patient history 1",
+            "Example patient history 2",
+            "Example patient history 3"
+          ],
+          "manual": false
+        },
+        {
+          "key": "prior_findings",
+          "type": "text",
+          "required": false,
+          "label": "Prior findings",
+          "presets": [
+            "Example prior findings 1",
+            "Example prior findings 2",
+            "Example prior findings 3"
+          ],
+          "manual": false
+        }
+      ],
+      "source": {
+        "file": "server/routes/ai.js",
+        "line": 1468
+      }
+    }
+  ],
+  "resources": []
+}

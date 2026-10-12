@@ -107,6 +107,7 @@ export default function CodexOperationsFeature() {
   const [errors, setErrors] = useState({});
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({ task: '', owner: '', priority: 'Medium', due: '', source: '', impact: 5 });
+  const [detail, setDetail] = useState(null);
 
   const items = workspace.items;
   const today = new Date().toISOString().slice(0, 10);
@@ -136,6 +137,13 @@ export default function CodexOperationsFeature() {
       });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    if (!detail) return undefined;
+    const onKey = (event) => { if (event.key === 'Escape') setDetail(null); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [detail]);
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -326,7 +334,15 @@ export default function CodexOperationsFeature() {
           <thead><tr style={{ background: '#f1f5f9', textAlign: 'left' }}>{['Work item', 'Owner', 'Priority', 'Status', 'Approval', 'SLA', 'Evidence', 'Escalate', 'Actions'].map((heading) => <th key={heading} style={{ padding: 11 }}>{heading}</th>)}</tr></thead>
           <tbody>
             {filtered.map((item) => (
-              <tr key={item.id} style={{ borderTop: '1px solid #e2e8f0', background: isOverdue(item) ? '#fff7ed' : '#fff' }}>
+              <tr
+                key={item.id}
+                role="button"
+                tabIndex={0}
+                aria-label={'Open details for ' + item.task}
+                onClick={() => setDetail(item)}
+                onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setDetail(item); } }}
+                style={{ borderTop: '1px solid #e2e8f0', background: isOverdue(item) ? '#fff7ed' : '#fff', cursor: 'pointer' }}
+              >
                 <td style={{ padding: 11 }}><strong>{item.task}</strong><small style={{ display: 'block', color: '#64748b', marginTop: 4 }}>{item.source}</small></td>
                 <td style={{ padding: 11 }}>{item.owner}</td>
                 <td style={{ padding: 11 }}>{item.priority}</td>
@@ -353,6 +369,33 @@ export default function CodexOperationsFeature() {
           {workspace.audit.slice(0, 6).map((entry) => <div key={entry.id} style={{ padding: '8px 0', borderTop: '1px solid #eef2f7' }}><strong>{entry.message}</strong><small style={{ display: 'block', color: '#64748b' }}>{new Date(entry.at).toLocaleString()}</small></div>)}
         </section>
       </div>
+
+      {detail && (
+        <div onClick={() => setDetail(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
+          <div role="dialog" aria-modal="true" aria-label="Work item details" onClick={(event) => event.stopPropagation()} style={{ background: '#fff', borderRadius: 14, width: '100%', maxWidth: 560, maxHeight: '90vh', overflow: 'auto', padding: 22, color: '#172033' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+              <div>
+                <p style={{ margin: 0, color: '#64748b', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Work item details</p>
+                <h2 style={{ margin: '6px 0 0', fontSize: 20 }}>{detail.task}</h2>
+              </div>
+              <button type="button" onClick={() => setDetail(null)} style={{ ...buttonStyle, padding: '4px 10px' }} aria-label="Cancel details dialog">×</button>
+            </div>
+            <dl style={{ display: 'grid', gridTemplateColumns: 'minmax(120px, 40%) 1fr', gap: '6px 14px', margin: '16px 0' }}>
+              {Object.entries(detail).filter(([key]) => key !== 'id').map(([key, value]) => (
+                <React.Fragment key={key}>
+                  <dt style={{ color: '#64748b', fontSize: 13, fontWeight: 600 }}>{key}</dt>
+                  <dd style={{ margin: 0, fontSize: 13, overflowWrap: 'anywhere' }}>{typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value ?? 'Not provided')}</dd>
+                </React.Fragment>
+              ))}
+            </dl>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <button type="button" onClick={() => { editItem(detail); setDetail(null); }} style={buttonStyle}>Edit</button>
+              <button type="button" onClick={() => { removeItem(detail); setDetail(null); }} style={{ ...buttonStyle, color: '#b91c1c' }}>Delete</button>
+              <button type="button" onClick={() => setDetail(null)} style={buttonStyle}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
