@@ -32,6 +32,7 @@ app.use('/api/billing', require('./routes/billing'));
 app.use('/api/audit', require('./routes/audit'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/ai', require('./routes/ai'));
+app.use('/api/feature-pack', require('./routes/featurePack'));
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {

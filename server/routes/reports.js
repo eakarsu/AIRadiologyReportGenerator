@@ -73,6 +73,15 @@ router.get('/', auth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+router.get('/export', auth, async (req, res) => {
+  try {
+    const rowsResult = await db.query(`SELECT rp.* FROM reports rp LEFT JOIN studies s ON rp.study_id = s.id LEFT JOIN patients p ON s.patient_id = p.id WHERE ($1 = '' OR p.first_name ILIKE $2 OR p.last_name ILIKE $2 OR s.accession_number ILIKE $2) AND ($3 = '' OR rp.status = $3) ORDER BY rp.created_at DESC`, [req.query.search || '', `%${req.query.search || ''}%`, req.query.status || '']);
+    const rows = rowsResult.rows; const fmt = String(req.query.format || 'json').toLowerCase();
+    if (fmt === 'csv') { const h = rows.length ? Object.keys(rows[0]) : ['id','status']; const esc = v => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; }; res.setHeader('Content-Type','text/csv'); res.setHeader('Content-Disposition','attachment; filename="reports.csv"'); return res.send([h.join(','), ...rows.map(r => h.map(k => esc(r[k])).join(','))].join('\n')); }
+    if (fmt !== 'json') return res.status(400).json({ error: 'format must be json or csv' });
+    res.setHeader('Content-Disposition','attachment; filename="reports.json"'); return res.json({ data: rows });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
 router.get('/:id', auth, async (req, res) => {
   try {
     const result = await db.query(`
